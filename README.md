@@ -1,2 +1,28 @@
 # FinalProject_CompPhys
-Jonas and I will pass hopefully (Arvid for sure)
+Jonas, Avid and I will pass hopefully (Arvid for sure)
+
+lasst uns mal hier tracken wer was gerade machen will etc pp
+
+
+Corni################################
+-settings.py erstellen
+
+-unit system sich einigen :)
+
+
+Kommentar: Ich bin donnerstag bis Montag nicht in Freiburg und habe vermutlich nicht hart viel zeit zum arbeiten!
+
+
+
+Jonas###############################
+
+
+
+Avid#################################
+
+
+
+
+
+##############Diskussion##################
+Hat jmd von euch premium overleaf so das wir zu dritt ein report schreiben können? oder geht das auch so irgendwie?!
