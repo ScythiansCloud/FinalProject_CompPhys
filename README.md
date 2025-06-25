@@ -13,7 +13,6 @@ Corni################################
 Kommentar: Ich bin donnerstag bis Montag nicht in Freiburg und habe vermutlich nicht hart viel zeit zum arbeiten!
 
 
-
 Jonas###############################
 ⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⣤⣶⠶⠶⣶⣤⣤⡀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⢀⣴⠾⠛⠉⠀⢠⣾⣴⡾⠛⠻⣷⣄⠀⠀⠀⠀⠀
@@ -51,8 +50,10 @@ Jonas###############################
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠛⠛⠳⠶⠶⠶⠶⠶⠶⠶⠿⠛⠉⠀⠀⠀⠀⠀
 
 
-Avid#################################
+ARRRRvid#################################
+Kommentar: Ich bin auch Donnerstag bis Montag fort, kann erst nächste Woche Sachen machen; Also Montag / Dienstag / Mittwoch
 
+Ich kann eine Struktur anlegen: eine übersichtliche main.py; Outputfolder system, bei dem bei jedem run ein neuer ordner erstellt wird; Logging;....
 
 
 
