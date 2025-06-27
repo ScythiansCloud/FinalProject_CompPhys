@@ -15,9 +15,10 @@ git commit: (ist klar)
 
 
 Corni################################
--settings.py erstellen
+-settings.py erstellt
+-force.py & update.py erstellt
+-initialization erstellt
 
--unit system sich einigen :)
 
 
 Kommentar: Ich bin donnerstag bis Montag nicht in Freiburg und habe vermutlich nicht hart viel zeit zum arbeiten!

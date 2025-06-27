@@ -67,3 +67,10 @@ def pbc(xi, xj, xlo, xhi):
         rij = rij - np.sign(rij) * l 
         
     return rij
+
+
+
+if __name__ == '__main__':
+    import numpy as np
+    for i in range(50):
+        print(np.random.rand())
