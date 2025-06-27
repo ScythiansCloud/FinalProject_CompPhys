@@ -5,7 +5,7 @@ from numba import njit, prange
 
 
 @njit(parallel=True)
-def forceLJ(x, y, z, xlo, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
+def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
     
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
@@ -47,6 +47,7 @@ def forceLJ(x, y, z, xlo, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D,
                 fx[j] += LJ* rijx
                 fy[j] += LJ* rijy
                 fz[j] += LJ* rijz
+    return fx, fy, fz
 
 
 ### doppelcheckt mla jmd die ableitung der potentiale ob das so sinn macht und algebraisch auch stimmt (und vorzeichen bin ihc mir nicht 100% sicher aber ist mal ein anfang :)
