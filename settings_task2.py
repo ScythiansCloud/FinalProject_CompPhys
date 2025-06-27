@@ -10,22 +10,18 @@ def init(Csi):
 
     #Simulation 
     global N 
-    N = 1
+    N = 256
 
     global nsteps
-    nsteps = 1
+    nsteps = 200000
 
     global nsave
-    nsave = 1
+    nsave = 10
 
     # constants
-    global kB
-    kB = 1
+    global kBT
+    kBT = 1
     ########################################################
-
-    # system constants
-    global T
-    T = 1
 
     global xi #fricition parameter
     xi = 1
@@ -37,10 +33,10 @@ def init(Csi):
     sig = 1
 
     global Cs 
-    Cs = Csi ##maybe we handle this not in settings because we shoudl vary it a lot idk...
+    Cs = Csi 
 
     global Z 
-    Z = 1
+    Z = 50
 
     global gaus_var
     gaus_var = 1
@@ -48,7 +44,7 @@ def init(Csi):
     ## derived constants
 
     global rho 
-    rho = 0.005*sig**(-3)
+    rho = 0.5*sig**(-3)
 
     global L 
     L = (N/rho)**(1/3)
@@ -63,18 +59,20 @@ def init(Csi):
     kappa_D = np.sqrt(8*np.pi *lambda_B* Csi  )
 
     global A 
-    A = 0.1*kB*T
+    A = 0.1*kBT
 
     global Zprime
     Zprime = Z*np.exp(kappa_D*sig/2)/(1+kappa_D*sig/2)
 
     global tau
-    tau = sig*sig/(kB*T)*xi
+    tau = sig*sig/(kBT)*xi
 
     global delta_t
     delta_t= 1e-3*tau
 
-    '''L, kappa d, Zprime, A , tau LD, lambda_B'''
+
+'''Some of the parameters are only needed for task 3 but they are included here anyway :)'''
+
 
 
 
