@@ -4,8 +4,13 @@ import numpy as np
 
 
 def update(USEFORCE, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT, xi, delta_t, gaus_var):
-    zeta = np.random.normal(loc=0, scale=gaus_var)
-    if USEFORCE:
+
+    zeta_x = np.random.normal(loc=0, scale=gaus_var)
+    zeta_y = np.random.normal(loc=0, scale=gaus_var)
+    zeta_z = np.random.normal(loc=0, scale=gaus_var)
+
+
+    if USEFORCE: # depending on task 2 or 3 we need or do not need the acceleration
         fx, fy, fz = force.acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT)
 
         # add friction
@@ -16,16 +21,15 @@ def update(USEFORCE, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd, lambda_
         ax, ay, az = 0,0,0
 
     # update velocities
-    randomvel = np.sqrt(2*kbT*xi)/m*zeta* np.sqrt(delta_t) # verwirrt mich ein wenig weil die ja dan immer nur in die (1,1,1) richtung zeigt idk?
     
-    vx += ax*delta_t + randomvel
-    vy += ay*delta_t + randomvel
-    vz += az*delta_t + randomvel
+    vx += ax*delta_t + np.sqrt(2*kbT*xi)/m*zeta_x* np.sqrt(delta_t)
+    vy += ay*delta_t + np.sqrt(2*kbT*xi)/m*zeta_y* np.sqrt(delta_t)
+    vz += az*delta_t + np.sqrt(2*kbT*xi)/m*zeta_z* np.sqrt(delta_t)
 
     # update positions  
     x += vx * delta_t
     y += vy * delta_t
-    z += vz * delta_t
+    z += vz * delta_t  ### noch PBC adden (oder vielleicht sollten wir das nur in der darstellung machen dann umd die MSD zu berechnen)
 
     return x,y,z,vx,vy,vz
 

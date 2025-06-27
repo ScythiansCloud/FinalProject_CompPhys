@@ -36,3 +36,7 @@ Ich kann eine Struktur anlegen: eine übersichtliche main.py; Outputfolder syste
 
 ##############Diskussion##################
 Hat jmd von euch premium overleaf so das wir zu dritt ein report schreiben können? oder geht das auch so irgendwie?!
+
+
+Fragen für tut:
+sollen wir ein neue random number zeta, x,yz generieren oder sollen wir eine randome richtung wählen?
