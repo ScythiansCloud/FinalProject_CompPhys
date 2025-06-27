@@ -39,4 +39,5 @@ Hat jmd von euch premium overleaf so das wir zu dritt ein report schreiben könn
 
 
 Fragen für tut:
-sollen wir ein neue random number zeta, x,yz generieren oder sollen wir eine randome richtung wählen?
+sollen wir ein neue random number zeta für x,yz generieren oder 
+eine |zeta| wählen und dann die richtung randomisieren?
