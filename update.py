@@ -14,7 +14,8 @@ def update(USEFORCE, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd, lambda_
         fx, fy, fz = force.acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT)
 
         # add friction
-        ax = fx-xi*vx/m
+        ax = fx-xi*vx/m         # weil acceleration = force/mass und m=1 ist eigentlich egal aber würde 
+                                # trotzdem auch ax = fx/m-xi*vx/m etc. schreiben für die Zukunft
         ay = fy-xi*vy/m
         az = fz-xi*vz/m
     else:

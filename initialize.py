@@ -12,7 +12,7 @@ import settings_task2 as settings
 from numba import njit
 
  
-def InitializeAtoms(Csi):
+def InitializeAtoms(Csi, random_seed):
     settings.init(Csi)
     
 
@@ -26,9 +26,9 @@ def InitializeAtoms(Csi):
 
     i =   0
     while n < settings.N:
-        x0 = np.random.rand()*settings.L
-        y0 =  np.random.rand()*settings.L
-        z0 =  np.random.rand()*settings.L
+        x0 = np.random.rand(random_seed=random_seed)*settings.L
+        y0 =  np.random.rand(random_seed=random_seed)*settings.L
+        z0 =  np.random.rand(random_seed=random_seed)*settings.L
 
         b = False
         for i in range(n):
@@ -49,9 +49,9 @@ def InitializeAtoms(Csi):
 
             
 
-            vx0 = 0.5 - np.random.rand()
-            vy0 = 0.5 - np.random.rand()
-            vz0 = 0.5 - np.random.rand()
+            vx0 = 0.5 - np.random.rand(random_seed=random_seed)
+            vy0 = 0.5 - np.random.rand(random_seed=random_seed)
+            vz0 = 0.5 - np.random.rand(random_seed=random_seed)
             
             vx[n] = vx0
             vy[n] = vy0
