@@ -25,7 +25,11 @@ Kommentar: Ich bin donnerstag bis Montag nicht in Freiburg und habe vermutlich n
 
 
 Jonas###############################
-
+- Habe Cornelius force.py auf bugs untersucht und Kleinigkeiten angemerkt
+- auch update.py angeschaut und denke es passt
+- simulation.py und main.ipynb erstellt und bisschen mit dependencies installieren in main.ipynb rumprobiert
+- output.py hinzugefügt und WriteOut function der Trajektorie für OVITIO reinkopiert
+- simulation.py hinzugefügt
 
 ARRRRvid#################################
 Kommentar: Ich bin auch Donnerstag bis Montag fort, kann erst nächste Woche Sachen machen; Also Montag / Dienstag / Mittwoch

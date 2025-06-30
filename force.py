@@ -6,6 +6,8 @@ from numba import njit, prange
 
 @njit(parallel=True)
 def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
+
+# Jonas: Wir geben die force zurück aber die Funktion heißt acc, finde ich etwas verwirrend
     
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
@@ -23,11 +25,12 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
             r2 = rijx * rijx + rijy * rijy + rijz * rijz
             r = np.sqrt(r2)
 
-            if r > (sig + delta):
+            if r > (sig + delta):       # Jonas: Denke wir könnten hier auf noch einen cutoff hinzufügen, 
+                                        # damit wir nicht zu viele Kräfte berechnen müssen
                 '''calculate vdw + elec interaction'''
 
-                VDW = A*sig/(24*m*(r-sig)**2)
-                EL = -Zprimesqrd*lambda_B*np.exp(-kappa_D*r)*(1/r+kappa_D)/(m*r**2)
+                VDW = A*sig/(24*m*(r-sig)**2)   # Jonas: habe ich auch so aber ohne das m. Warum sollte das da sein?
+                EL = -Zprimesqrd*lambda_B*np.exp(-kappa_D*r)*(1/r+kappa_D)/(m*r**2) # Jonas: habe ich auch so nur wieder ohne masse m
                 SUM = VDW + EL
 
                 fx[i] -= SUM* rijx
@@ -39,7 +42,8 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
             
             else:
                 '''calculate lj interacion'''
-                LJ = 8*kbT/m*((0.27993599999999996/r**8-0.02612138803199999/r**14))
+                # Jonas: jo passt mMn
+                LJ = 8*kbT/m*((0.27993600/r**8-0.02612138803199999/r**14))
 
                 fx[i] -= LJ* rijx
                 fy[i] -= LJ* rijy
@@ -47,7 +51,7 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
                 fx[j] += LJ* rijx
                 fy[j] += LJ* rijy
                 fz[j] += LJ* rijz
-    return fx, fy, fz
+    return fx, fy, fz               
 
 
 ### doppelcheckt mla jmd die ableitung der potentiale ob das so sinn macht und algebraisch auch stimmt (und vorzeichen bin ihc mir nicht 100% sicher aber ist mal ein anfang :)
