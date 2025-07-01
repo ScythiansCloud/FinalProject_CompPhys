@@ -7,7 +7,7 @@
 
 # imports
 import numpy as np
-import settings_task2 as settings
+import settings.settings_task2 as settings
 #import settings_task3 as settings
 from numba import njit
 
