@@ -8,7 +8,7 @@ import settings.settings_task2 as settings
 from . import output
 
 
-def Simulation(write, Traj_name, everyN):
+def Simulation(outdir, write, Traj_name, everyN):
 
     # random seed for reproducibility
     np.random.seed(settings.random_seed)
@@ -26,8 +26,7 @@ def Simulation(write, Traj_name, everyN):
     print(f'vx, vy, vz = {vx[0], vy[0], vz[0]}')
 
     if write:
-        fileoutput_eq = open(Traj_name + str(everyN) + '_nsteps_' + str(settings.nsteps), "w")
-        # fileoutput_prod = open(Traj_name + str(everyN) + '_prod', "w")
+        fileoutput_eq = open(outdir / (Traj_name + str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
         output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings) 
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
 
