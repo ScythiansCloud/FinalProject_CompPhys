@@ -21,6 +21,9 @@ def init(Csi):
     # constants
     global kBT
     kBT = 1
+
+    global random_seed
+    random_seed = 420
     ########################################################
 
     global xi #fricition parameter
@@ -63,12 +66,17 @@ def init(Csi):
 
     global Zprime
     Zprime = Z*np.exp(kappa_D*sig/2)/(1+kappa_D*sig/2)
+    global Zprimesqrd
+    Zprimesqrd = Zprime*Zprime
 
     global tau
     tau = sig*sig/(kBT)*xi
 
     global delta_t
     delta_t= 1e-3*tau
+
+    global tau_berendsen
+    tau_berendsen = 1000*delta_t
 
 
 '''Some of the parameters are only needed for task 3 but they are included here anyway :)'''

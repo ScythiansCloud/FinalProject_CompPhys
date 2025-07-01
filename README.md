@@ -31,6 +31,8 @@ Jonas###############################
 - output.py hinzugefügt und WriteOut function der Trajektorie für OVITIO reinkopiert
 - simulation.py hinzugefügt
 
+- OVITO Simulations work with Initialization but yet there is no rescaling of the velocity
+
 ARRRRvid#################################
 Kommentar: Ich bin auch Donnerstag bis Montag fort, kann erst nächste Woche Sachen machen; Also Montag / Dienstag / Mittwoch
 

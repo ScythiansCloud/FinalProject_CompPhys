@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 import initialize
 import force
 import update
@@ -8,13 +9,13 @@ import output
 
 
 def Simulation(write, Traj_name, everyN):
-    # print(f"After:\n rho = {settings.rho:.2e}")
-    # print(f"L = {settings.l}")
 
     # random seed for reproducibility
-    x, y, z, vx, vy, vz = initialize.InitializeAtoms()
-    fx, fy, fz = force.acc(x, y, z, settings.l, settings.N, settings.sig, settings.delta, settings.A, settings.m,
-                                      settings.Zprimesqrd, settings.lambda_B, settings.kappa_D, settings.kbT)
+    x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings.Cs, settings.random_seed)
+    x,y,z, vx, vy, vz = update.update(False, x, y, z, vx, vy, vz, settings.L, settings.N, settings.sig,
+                                      settings.delta, settings.A, settings.m, settings.Zprimesqrd,
+                                      settings.lambda_B, settings.kappa_D, settings.kBT, settings.xi,
+                                      settings.delta_t, settings.gaus_var, settings.random_seed)
     
 
     # rescale velocities should not be needed here, as we do this already in initialize 
@@ -22,11 +23,25 @@ def Simulation(write, Traj_name, everyN):
     # vx, vy, vz = initialize.rescalevelocity(vx, vy, vz, settings.kBT, T_curr)
     
     print(f'vx, vy, vz = {vx[0], vy[0], vz[0]}')
-    print(f'fx, fy, fz = {fx[0], fy[0], fz[0]}')
 
-
-        # open documents for eq run
     if write:
-        fileoutputeq = open(Traj_name + str(everyN) + '_eq', "w")
-        # fileoutput = open(Traj_name + str(everyN) + '_prod', "w")
-        output.WriteTrajectory3d(fileoutputeq, 0,x,y,z) # noch anpassen an L, Lz
+        fileoutput_eq = open(Traj_name + str(everyN) + '_nsteps_' + str(settings.nsteps), "w")
+        # fileoutput_prod = open(Traj_name + str(everyN) + '_prod', "w")
+        output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings) 
+        # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
+
+    for i in tqdm(range(settings.nsteps)):
+        x,y,z, vx, vy, vz = update.update(False, x, y, z, vx, vy, vz, settings.L, settings.N, settings.sig,
+                                        settings.delta, settings.A, settings.m, settings.Zprimesqrd,
+                                        settings.lambda_B, settings.kappa_D, settings.kBT, settings.xi,
+                                        settings.delta_t, settings.gaus_var, settings.random_seed)
+        
+        # Temp rescaling
+        T_curr = force.temperature(vx, vy, vz)
+        force.berendsen_thermostat(vx, vy, vz, T_curr, settings.Tdesired, settings.delta_t, settings.tau_berendsen)
+        
+        # save shit every n
+        if i % everyN == 0:
+            if write:
+                output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings) 
+
