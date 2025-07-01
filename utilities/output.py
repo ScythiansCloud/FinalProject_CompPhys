@@ -1,5 +1,5 @@
-import settings_task2
-import settings_task3
+from settings import settings_task2
+from settings import settings_task3
 import numpy as np
 
 def WriteTrajectory3d(fileoutput, itime, x, y, z, settings):

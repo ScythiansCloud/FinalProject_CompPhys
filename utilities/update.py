@@ -1,5 +1,5 @@
 '''implementation of the algorithm'''
-import force
+import utilities.force as force
 import numpy as np
 from numba import njit, prange
 

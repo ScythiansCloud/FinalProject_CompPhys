@@ -1,5 +1,6 @@
 import re
 import logging
+import os
 
 def create_output_directory():
     """
@@ -9,7 +10,7 @@ def create_output_directory():
     from pathlib import Path
 
     # Define the root output directory
-    HERE = Path(__file__).resolve().parent
+    HERE = Path(__file__).resolve().parent.parent
     ROOT_OUT = HERE / "output"
     ROOT_OUT.mkdir(exist_ok=True)
 

@@ -1,11 +1,11 @@
 import numpy as np
 from tqdm import tqdm
-import initialize
-import force
-import update
-import settings_task2 as settings
+from . import initialize
+from . import force
+from . import update
+import settings.settings_task2 as settings
 # import settings_task3 as settings
-import output
+from . import output
 
 
 def Simulation(write, Traj_name, everyN):
