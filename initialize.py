@@ -14,7 +14,7 @@ from numba import njit
  
 def InitializeAtoms(Csi, random_seed):
     settings.init(Csi)
-    
+    np.random.seed(settings.random_seed)    
 
     n = 0
     x = np.zeros(shape=(settings.N))
@@ -26,9 +26,9 @@ def InitializeAtoms(Csi, random_seed):
 
     i =   0
     while n < settings.N:
-        x0 = np.random.rand(random_seed=random_seed)*settings.L
-        y0 =  np.random.rand(random_seed=random_seed)*settings.L
-        z0 =  np.random.rand(random_seed=random_seed)*settings.L
+        x0 =  np.random.rand()*settings.L
+        y0 =  np.random.rand()*settings.L
+        z0 =  np.random.rand()*settings.L
 
         b = False
         for i in range(n):
@@ -49,9 +49,9 @@ def InitializeAtoms(Csi, random_seed):
 
             
 
-            vx0 = 0.5 - np.random.rand(random_seed=random_seed)
-            vy0 = 0.5 - np.random.rand(random_seed=random_seed)
-            vz0 = 0.5 - np.random.rand(random_seed=random_seed)
+            vx0 = 0.5 - np.random.rand()
+            vy0 = 0.5 - np.random.rand()
+            vz0 = 0.5 - np.random.rand()
             
             vx[n] = vx0
             vy[n] = vy0

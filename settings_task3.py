@@ -21,6 +21,9 @@ def init(Csi):
     # constants
     global kBT
     kBT = 1
+
+    global random_seed
+    random_seed = 420
     ########################################################
 
     global xi #fricition parameter

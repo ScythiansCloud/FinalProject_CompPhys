@@ -7,7 +7,7 @@ from numba import njit, prange
 @njit(parallel=True)
 def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
 
-# Jonas: Wir geben die force zurück aber die Funktion heißt acc, finde ich etwas verwirrend
+# Wir geben die force zurück aber die Funktion heißt acc, finde ich etwas verwirrend
     
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
@@ -71,6 +71,20 @@ def pbc(xi, xj, xlo, xhi):
         rij = rij - np.sign(rij) * l 
         
     return rij
+
+
+@njit(parallel=True)
+def berendsen_thermostat(vx, vy, vz, T, T0, delta_t, tau_berendsen):
+    """
+    tau:    coupling strength
+    T:      current Temperature
+    T0:     Temp. to jump to / approach
+    """
+    lambdaa = np.sqrt(1 + delta_t / tau_berendsen * (T0/T - 1))
+    for i in prange(len(vx)):
+        vx[i] *= lambdaa
+        vy[i] *= lambdaa
+        vz[i] *= lambdaa
 
 
 
