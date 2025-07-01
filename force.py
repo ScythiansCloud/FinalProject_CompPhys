@@ -87,6 +87,15 @@ def berendsen_thermostat(vx, vy, vz, T, T0, delta_t, tau_berendsen):
         vz[i] *= lambdaa
 
 
+def temperature(vx, vy, vz, settings):
+    # receives units of [v] = nm/fs --> [v^2] = nm^2 /fs^2
+    vsq = np.sum(vx*vx + vy*vy + vz*vz)
+
+    # kinetic Energy calculation
+    K = 0.5 * settings.m * vsq
+    kBT = 2.0 * K / (3.0 * settings.N)
+
+    return kBT, K
 
 if __name__ == '__main__':
     import numpy as np

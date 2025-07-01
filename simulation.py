@@ -11,8 +11,9 @@ import output
 def Simulation(write, Traj_name, everyN):
 
     # random seed for reproducibility
+    np.random.seed(settings.random_seed)
     x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings.Cs, settings.random_seed)
-    x,y,z, vx, vy, vz = update.update(False, x, y, z, vx, vy, vz, settings.L, settings.N, settings.sig,
+    x,y,z, vx, vy, vz = update.update(True, x, y, z, vx, vy, vz, settings.L, settings.N, settings.sig,
                                       settings.delta, settings.A, settings.m, settings.Zprimesqrd,
                                       settings.lambda_B, settings.kappa_D, settings.kBT, settings.xi,
                                       settings.delta_t, settings.gaus_var, settings.random_seed)
@@ -31,14 +32,14 @@ def Simulation(write, Traj_name, everyN):
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
 
     for i in tqdm(range(settings.nsteps)):
-        x,y,z, vx, vy, vz = update.update(False, x, y, z, vx, vy, vz, settings.L, settings.N, settings.sig,
+        x,y,z, vx, vy, vz = update.update(True, x, y, z, vx, vy, vz, settings.L, settings.N, settings.sig,
                                         settings.delta, settings.A, settings.m, settings.Zprimesqrd,
                                         settings.lambda_B, settings.kappa_D, settings.kBT, settings.xi,
                                         settings.delta_t, settings.gaus_var, settings.random_seed)
         
-        # Temp rescaling
-        T_curr = force.temperature(vx, vy, vz)
-        force.berendsen_thermostat(vx, vy, vz, T_curr, settings.Tdesired, settings.delta_t, settings.tau_berendsen)
+        # # Temp rescaling
+        kBT_current, Kin = force.temperature(vx, vy, vz, settings)
+        force.berendsen_thermostat(vx, vy, vz, kBT_current, 1, delta_t=settings.delta_t, tau_berendsen=settings.tau_berendsen)
         
         # save shit every n
         if i % everyN == 0:
