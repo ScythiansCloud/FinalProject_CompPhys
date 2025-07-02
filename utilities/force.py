@@ -15,7 +15,7 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
 
 
 
-    for i in range(N-1):
+    for i in prange(N-1):
         for j in range(i+1, N):
 
             rijx = pbc(x[i], x[j], 0, L)
