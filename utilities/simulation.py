@@ -42,6 +42,7 @@ def Simulation(outdir, write, Traj_name, everyN):
         
         # save shit every n
         if i % everyN == 0:
+            
             if write:
                 output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings) 
 

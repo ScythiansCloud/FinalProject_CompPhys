@@ -3,7 +3,7 @@ from settings import settings_task3
 import numpy as np
 
 def WriteTrajectory3d(fileoutput, itime, x, y, z, settings):
-
+    
     fileoutput.write("ITEM: TIMESTEP \n")
     fileoutput.write("%i \n" % itime)
     fileoutput.write("ITEM: NUMBER OF ATOMS \n")

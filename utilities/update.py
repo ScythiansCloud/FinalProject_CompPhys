@@ -4,6 +4,7 @@ import numpy as np
 from numba import njit, prange
 
 # @njit(parallel=True)
+# @njit
 def update(USEFORCE, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd, 
            lambda_B, kappa_D, kbT, xi, delta_t, gaus_var, random_seed):
 
@@ -42,9 +43,9 @@ def update(USEFORCE, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd,
     #     y[i] = (y[i] + vy[i] * delta_t) % L
     #     z[i] = (z[i] + vz[i] * delta_t) % L ### noch PBC adden (oder vielleicht sollten wir das nur in der darstellung machen dann umd die MSD zu berechnen)
    
-    x = (x + vx * delta_t) % L     # passt auch denke ich
-    y = (y + vy * delta_t) % L
-    z = (z + vz * delta_t) % L
+    x = (x + vx * delta_t)     # passt auch denke ich
+    y = (y + vy * delta_t)
+    z = (z + vz * delta_t)
 
     return x,y,z,vx,vy,vz
 
