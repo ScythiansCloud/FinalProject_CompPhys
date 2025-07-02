@@ -43,7 +43,7 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
             else:
                 '''calculate lj interacion'''
                 # Jonas: jo passt mMn
-                LJ = 8*kbT/m*((0.27993600/r**8-0.02612138803199999/r**14))
+                LJ = -8*kbT/m*((0.27993600/r**8-0.02612138803199999/r**14))
 
                 fx[i] -= LJ* rijx
                 fy[i] -= LJ* rijy
