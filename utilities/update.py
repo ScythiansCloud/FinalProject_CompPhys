@@ -15,7 +15,7 @@ def update(USEFORCE, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd,
 
 
     if USEFORCE: # depending on task 2 or 3 we need or do not need the acceleration
-        fx, fy, fz = force.acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT)
+        fx, fy, fz, x, y, z = force.acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT)
 
 
         # add friction
