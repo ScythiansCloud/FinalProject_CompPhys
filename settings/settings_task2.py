@@ -23,7 +23,7 @@ def init(Csi):
     kBT = 1
 
     global random_seed
-    random_seed = 420
+    random_seed = 42069
     ########################################################
 
     global xi #fricition parameter
