@@ -14,7 +14,7 @@ from numba import njit
  
 def InitializeAtoms(Csi, random_seed):
     settings.init(Csi)
-    np.random.seed(settings.random_seed)    
+    # np.random.seed(settings.random_seed)    
 
 
     x = np.zeros(shape=(settings.N))
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     #print(InitializeAtoms()[0])
 
     import matplotlib.pyplot as plt
-    x, y, z, _, _, _ = InitializeAtoms(10)
+    x, y, z, _, _, _ = InitializeAtoms(10,42)
     # plt.figure(figsize=[10,20])
     plt.scatter(y,z)
     #plt.scatter(settings.deltaxyz/2, settings.deltaxyz/2)

@@ -27,21 +27,12 @@ def update(USEFORCE, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd,
     else:
         ax, ay, az = 0,0,0      # for task 2
 
-    # for i in prange(N): # changed to prange for parallelization
-    #     # update velocities    
-    #     vx[i] += ax[i]*delta_t + np.sqrt(2*kbT*xi)/m*zeta_x[i]*np.sqrt(delta_t)     # passt denke ich
-    #     vy[i] += ay[i]*delta_t + np.sqrt(2*kbT*xi)/m*zeta_y[i]*np.sqrt(delta_t)
-    #     vz[i] += az[i]*delta_t + np.sqrt(2*kbT*xi)/m*zeta_z[i]*np.sqrt(delta_t)
+
 
     vx += ax*delta_t + np.sqrt(2*kbT*xi)/m*zeta_x*np.sqrt(delta_t)     # passt denke ich
     vy += ay*delta_t + np.sqrt(2*kbT*xi)/m*zeta_y*np.sqrt(delta_t)
     vz += az*delta_t + np.sqrt(2*kbT*xi)/m*zeta_z*np.sqrt(delta_t)
 
-    # for i in prange(N):         # also changed to prange for parallelization and added pbc
-    #     # update positions  
-    #     x[i] = (x[i] + vx[i] * delta_t) % L     # passt auch denke ich
-    #     y[i] = (y[i] + vy[i] * delta_t) % L
-    #     z[i] = (z[i] + vz[i] * delta_t) % L ### noch PBC adden (oder vielleicht sollten wir das nur in der darstellung machen dann umd die MSD zu berechnen)
    
     x = (x + vx * delta_t)     # passt auch denke ich
     y = (y + vy * delta_t)

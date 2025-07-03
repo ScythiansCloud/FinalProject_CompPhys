@@ -50,7 +50,7 @@ def Simulation(outdir, write, Traj_name, everyN):
 def Simulation2(outdir, write, Traj_name, everyN): # forces turned off
 
     # random seed for reproducibility
-    np.random.seed(settings.random_seed)
+    # np.random.seed(settings.random_seed)
     x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings.Cs, settings.random_seed)
     x,y,z, vx, vy, vz = update.update(False, x, y, z, vx, vy, vz, settings.L, settings.N, settings.sig,
                                       settings.delta, settings.A, settings.m, settings.Zprimesqrd,
