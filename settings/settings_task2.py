@@ -10,10 +10,10 @@ def init(Csi):
 
     #Simulation 
     global N 
-    N = 256
+    N = 3#256
 
     global nsteps
-    nsteps = 800     # nsteps!= 200000
+    nsteps = 800     #200000
 
     global nsave
     nsave = 10
