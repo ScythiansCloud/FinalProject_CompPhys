@@ -6,7 +6,7 @@ from . import update
 import settings.settings_task2 as settings
 # import settings_task3 as settings
 from . import output
-
+import logging
 
 def Simulation(outdir, write, Traj_name, everyN):
 
@@ -42,7 +42,7 @@ def Simulation(outdir, write, Traj_name, everyN):
         
         # save shit every n
         if i % everyN == 0:
-            
+
             if write:
                 output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings) 
 
@@ -77,13 +77,10 @@ def Simulation2(outdir, write, Traj_name, everyN): # forces turned off
                                         settings.lambda_B, settings.kappa_D, settings.kBT, settings.xi,
                                         settings.delta_t, settings.gaus_var, settings.random_seed)
         
-        # # Temp rescaling
-        # kBT_current, Kin = force.temperature(vx, vy, vz, settings)
-        # force.berendsen_thermostat(vx, vy, vz, kBT_current, 1, delta_t=settings.delta_t, tau_berendsen=settings.tau_berendsen)
-        
         # save shit every n
         if i % everyN == 0:
             if write:
+                logging.info(force.temperature(vx,vy,vz,settings=settings))
                 output.WriteTrajectory3d(fileoutput_eq, i,x,y,z, settings)
                 output.WriteunwrappedState(fileoutput_eq_unwrapped,i,x,y,z,vx,vy,vz)
 
