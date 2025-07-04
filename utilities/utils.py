@@ -33,7 +33,6 @@ def create_output_directory():
 def setup_logging(OUTDIR):
     FMT = "%(asctime)s  [%(levelname)s]  %(message)s"
     logging.basicConfig(level=logging.INFO, format=FMT, datefmt="%H:%M:%S")
-    log = logging.getLogger("MD-Driver")
     fh = logging.FileHandler(OUTDIR / "simulation.log", mode="w", encoding="utf-8")
     fh.setFormatter(logging.Formatter(FMT, datefmt="%H:%M:%S"))
-    log.addHandler(fh)
+    logging.getLogger().addHandler(fh)
