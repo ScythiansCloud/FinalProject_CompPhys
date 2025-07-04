@@ -4,9 +4,16 @@
 from numba import njit, prange
 import numpy as np
 
-def dist(x1,y1,z1,x0,y0,z0):
-    return 1
+@njit
+def distsqrd(x1,y1,z1,x0,y0,z0):
+    dx = x1-x0
+    dy = y1-y0
+    dz = z1-z0
 
+    return dx**2+dy**2+dz**2
+
+
+@njit(parallel=True)
 def MSD(x,y,z):
 
     N = len(x[0])
@@ -17,12 +24,13 @@ def MSD(x,y,z):
     tmax = steps //2 # different starting point 
 
 
-    rsqrd = np.zeros(steps)
+    rsqrd = np.zeros(lagtime)
 
     for i in prange(N):
         for t in prange(lagtime):
             for t_prime in range(tmax):
-                rsqrd[t] += dist(x[t_prime+t,i],y[t_prime+t,i],z[t_prime+t,i], x[t_prime,i], y[t_prime,i], z[t_prime,i]) **2
+                rsqrd[t] += distsqrd(x[t_prime+t,i],y[t_prime+t,i],z[t_prime+t,i], x[t_prime,i], y[t_prime,i], z[t_prime,i])
+    return rsqrd/N /tmax, np.linspace(0,lagtime,lagtime+1)
 
             
 
