@@ -30,7 +30,7 @@ def MSD(x,y,z):
         for t in prange(lagtime):
             for t_prime in range(tmax):
                 rsqrd[t] += distsqrd(x[t_prime+t,i],y[t_prime+t,i],z[t_prime+t,i], x[t_prime,i], y[t_prime,i], z[t_prime,i])
-    return rsqrd/N /tmax, np.linspace(0,lagtime,lagtime+1)
+    return rsqrd/N /tmax, np.linspace(0,lagtime-1,lagtime)
 
             
 
