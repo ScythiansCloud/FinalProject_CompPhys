@@ -75,8 +75,8 @@ def plot_msd(ax, lags, msd, dt=1.0, **kwargs):
 
     t = lags * dt
     line, = ax.plot(t, msd, **kwargs)
-    ax.set_xlabel("Time t")
-    ax.set_ylabel(r"$⟨r^2(t)⟩$")
+    ax.set_xlabel(r"Time $t\,[\tau_{\mathrm{LD}}]$")
+    ax.set_ylabel(r"$\langle r^{2}(t) \rangle\,[\sigma^{2}]$")
     ax.set_title("Mean‑Squared Displacement")
     return line
 

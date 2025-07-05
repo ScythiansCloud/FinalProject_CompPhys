@@ -1,29 +1,12 @@
 #!/usr/bin/env python3
-"""Complete workflow for *Task 2* – validation of the Langevin–Dynamics (LD)
-integration scheme by analysing the mean‑squared displacement (MSD) and the
-kinetic energy of an ideal gas of colloids.
+'''
+Task 2
 
-This script performs **all** required steps in one go:
-
-1. Creates a timestamped output directory and initialises logging.
-2. Runs an LD simulation with *all inter‑particle potentials switched off*
-   using :pyfunc:`utilities.simulation.Simulation2`.  The simulation writes
-   wrapped and unwrapped trajectories to text files in the output directory.
-3. Parses the unwrapped trajectory and computes
-   * the instantaneous kinetic energy per particle, and
-   * the mean‑squared displacement (MSD) according to Eq. (4) of the
-     assignment sheet using :pyfunc:`utilities.msd.compute_msd`.
-4. Produces a single PNG figure containing both diagnostics and saves it to
-   the output directory.
-
-Adjust *settings/settings_task2.py* to change physical parameters, and tweak
-*everyN* below to alter the snapshot saving frequency.  The script can be run
-from the project root via:
-
-```bash
-python main_task2.py
-```
-"""
+1. Make an output folder + logger
+2. Run a quick (non-interacting) Langevin-dynamics simulation
+3. Read the plain-text trajectory as it’s written
+4. Plot ⟨E_kin⟩  and MSD
+'''
 
 from __future__ import annotations
 
@@ -32,194 +15,148 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 from utilities.simulation import Simulation2
-from utilities import utils
-
-import settings.settings_task2 as settings
 from utilities.msd import compute_msd, plot_msd
+from utilities import utils
+import settings.settings_task2 as settings
 
 
-# ----------------------------------------------------------------------------
-# Configuration
-# ----------------------------------------------------------------------------
+# ─── tweak-here ──────────────────────────────────────────────────────────────
+TRAJ_NAME = "Task2"   # file prefix
+EVERY_N   = 10        # store a frame every N MD steps
+SAVE_FIG  = True      # write the PNG at the end?
+LOG_EVERY = 2_000     # print read progress every X frames
+# ─────────────────────────────────────────────────────────────────────────────
 
-TRAJ_NAME = "Task2"          # prefix for output trajectory files
-EVERY_N = 10                 # write unwrapped state every N integration steps
-SAVE_FIG = True
 
+def load_unwrapped_state(
+    filepath: Path,
+    *,
+    mass: float | None = None,
+    n_particles: int,
+    expected_frames: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
+    '''Read the trajectory produced by the simulation2 function
 
-# ----------------------------------------------------------------------------
-# Helper – parse the ASCII trajectory written by WriteunwrappedState
-# ----------------------------------------------------------------------------
+    Returns:
+        times, positions, velocities, KE (optional)
+    '''
+    logging.info('Reading trajectory → %s', filepath)
 
-def load_unwrapped_state(filepath: Path, mass: float | None = None):
-    """Read the unwrapped trajectory produced by *WriteunwrappedState*.
+    n_numbers = 1 + 6 * n_particles  # t + (x y z vx vy vz) * N
+    logging.debug('Need %d numbers per frame', n_numbers)
 
-    The writer sometimes encloses numeric arrays in square brackets and/or
-    separates values with commas – e.g. ``[0.24326, 1.02, ...]``.  This helper
-    therefore *cleans* every line by stripping ``[]`` and ``,`` before token
-    parsing, making the reader tolerant to a variety of formatting issues.
-    Any line that still does not match the expected column count is skipped
-    with a warning.
-    """
-
-    logging.info("Reading unwrapped state from %s", filepath)
-
-    def clean_tokens_from_line(line: str) -> list[str]:
-        """Remove brackets & commas, then split into tokens."""
+    def tokens(line: str) -> list[str]:
+        # strip fancy formatting LAMMPS-style output might add
         return (
-            line.replace("[", " ")
-            .replace("]", " ")
-            .replace(",", " ")
-            .split()
+            line.replace('[', ' ')
+                .replace(']', ' ')
+                .replace(',', ' ')
+                .replace('x:', ' ').replace('y:', ' ').replace('z:', ' ')
+                .replace('vx:', ' ').replace('vy:', ' ').replace('vz:', ' ')
+                .split()
         )
 
-    with open(filepath, "r") as fh:
-        # Find first non-empty, well‑formed line to infer n_particles
-        for first_raw in fh:
-            if first_raw.strip():
-                tokens0 = clean_tokens_from_line(first_raw)
-                if tokens0:
-                    break
-        else:
-            raise RuntimeError("Trajectory file appears to be empty.")
+    times, pos_chunks, vel_chunks, stash = [], [], [], []
+    frames = 0
 
-        n_cols0 = len(tokens0)
-        if (n_cols0 - 1) % 6 != 0 or n_cols0 < 7:
-            raise ValueError(
-                f"Cannot deduce particle number from first data line ({n_cols0} columns)."
-            )
-        n_particles = (n_cols0 - 1) // 6
-        expected_cols = 1 + 6 * n_particles
-        logging.debug("Detected %d particles from trajectory file", n_particles)
-
-        # Buffers
-        times: list[float] = []
-        positions_lst: list[np.ndarray] = []
-        velocities_lst: list[np.ndarray] = []
-
-        def process(tokens: list[str]):
-            data = np.array(tokens, dtype=float)
-            times.append(data[0])
-            pv = data[1:].reshape(n_particles, 6)
-            positions_lst.append(pv[:, :3])
-            velocities_lst.append(pv[:, 3:])
-
-        # First line processed (only if token count matches expectation)
-        if len(tokens0) == expected_cols:
-            process(tokens0)
-        else:
-            logging.warning("Skipping first malformed line with %d tokens (expected %d)", len(tokens0), expected_cols)
-
-        # Remaining lines
+    with open(filepath) as fh:
         for raw in fh:
             if not raw.strip():
                 continue
-            tokens = clean_tokens_from_line(raw)
-            if len(tokens) != expected_cols:
-                logging.warning(
-                    "Skipping line with %d tokens (expected %d)", len(tokens), expected_cols
-                )
-                continue
-            process(tokens)
+            stash.extend(tokens(raw))
 
-    if not times:
-        raise RuntimeError("No valid trajectory lines read – aborting analysis.")
+            # pull out complete frames as soon as we can
+            while len(stash) >= n_numbers:
+                frame, stash = stash[:n_numbers], stash[n_numbers:]
+                try:
+                    data = np.asarray(frame, float)
+                except ValueError:
+                    logging.warning('Bad frame starting with %s … skipped', frame[:6])
+                    continue
 
-    positions = np.stack(positions_lst, axis=0)
-    velocities = np.stack(velocities_lst, axis=0)
-    times = np.asarray(times, dtype=float)
+                times.append(data[0])
+                pv = data[1:].reshape(n_particles, 6)
+                pos_chunks.append(pv[:, :3])
+                vel_chunks.append(pv[:, 3:])
+                frames += 1
 
-    if n_particles is None:
-        # fall back to auto-detect (current behaviour)
-        infer n_particles from first line
-    else:
-        expected_cols = 1 + 6 * n_particles
+                if frames % LOG_EVERY == 0:
+                    pct = 100 * frames / expected_frames
+                    logging.info('Read %d / %d frames (%.1f %%)', frames, expected_frames, pct)
 
-    ke_per_frame = None
+    if stash:
+        logging.warning('Dropped %d stray numbers at EOF', len(stash))
+    if not frames:
+        raise RuntimeError('No usable frames – aborting.')
+
+    # stack into tidy arrays
+    positions  = np.stack(pos_chunks)
+    velocities = np.stack(vel_chunks)
+    times      = np.asarray(times)
+
+    ke = None
     if mass is not None:
-        ke_per_frame = 0.5 * mass * (velocities ** 2).sum(axis=-1).mean(axis=-1)
+        ke = 0.5 * mass * (velocities**2).sum(-1).mean(-1)  # ⟨v²⟩ per particle
 
-    return times, positions, velocities, ke_per_frame
+    return times, positions, velocities, ke
 
 
-# ----------------------------------------------------------------------------
-# Main routine
-# ----------------------------------------------------------------------------
+# ─── main ────────────────────────────────────────────────────────────────────
+def main() -> None:
+    # 1) folders + logger
+    outdir = utils.create_output_directory()
+    utils.setup_logging(outdir)
+    logging.info('=== Task 2 started ===')
 
-def main():
-    # Create output directory & logging as per project conventions
-    output_dir = utils.create_output_directory()
-    utils.setup_logging(output_dir)
+    # 2) run the tiny LD sim
+    settings.init(1)  # salt conc. irrelevant here
+    Simulation2(outdir, write=True, Traj_name=TRAJ_NAME, everyN=EVERY_N)
 
-    logging.info("=== Task 2 run started ===")
+    # 3) crunch the trajectory
+    traj_file = outdir / f'{TRAJ_NAME}unwrapped{EVERY_N}_nsteps_{settings.nsteps}'
+    n_frames  = settings.nsteps // EVERY_N + 1  # +1 for t=0
 
-    # ---------------------------------------------------------------------
-    # 1) Run the LD simulation with interactions off
-    # ---------------------------------------------------------------------
-
-    settings.init(1)  # salt conc. arbitrary – potentials are off inside Simulation2
-
-    Simulation2(output_dir, write=True, Traj_name=TRAJ_NAME, everyN=EVERY_N)
-
-    # ---------------------------------------------------------------------
-    # 2) Analysis – load trajectory, compute KE and MSD
-    # ---------------------------------------------------------------------
-
-    traj_file = (
-        output_dir
-        / f"{TRAJ_NAME}unwrapped{EVERY_N}_nsteps_{settings.nsteps}"
-    )
-    if not traj_file.exists():
-        raise FileNotFoundError(traj_file)
-
-    times, positions, velocities, ke_per_frame = load_unwrapped_state(
-    traj_file, mass=settings.m, n_particles=settings.N
+    times, pos, vel, ke = load_unwrapped_state(
+        traj_file,
+        mass=settings.m,
+        n_particles=settings.N,
+        expected_frames=n_frames,
     )
 
-    # The simulation saves every EVERY_N integration steps => physical Δt between
-    # *saved* frames is EVERY_N * settings.delta_t.
-    dt_snapshot = EVERY_N * settings.delta_t
+    dt_snap  = EVERY_N * settings.delta_t
+    lags, msd = compute_msd(pos, max_lag=len(times)//2)
 
-    # Compute MSD using the helper from utilities.msd
-    max_lag = len(times) // 2  # ensure consistency with assignment text
-    lags, msd = compute_msd(positions, max_lag=max_lag)
+    # 4) plots
+    fig, (ax_ke, ax_msd) = plt.subplots(2, 1, figsize=(6, 8), constrained_layout=True)
 
-    # ---------------------------------------------------------------------
-    # 3) Plot results
-    # ---------------------------------------------------------------------
+    # Kinetic energy
+    ax_ke.plot(times * settings.delta_t, ke)
+    ax_ke.set_xlabel(r'Time $t\,[\tau_{LD}]$')
+    ax_ke.set_ylabel(r'$\langle E_{kin}\rangle$ / particle')
+    ax_ke.set_title('Kinetic Energy')
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 8), constrained_layout=True)
+    # MSD
+    plot_msd(ax_msd, lags, msd, dt=dt_snap)
+    ax_msd.set_xlabel(r'Time $t\,[\tau_{LD}]$')
+    ax_msd.set_ylabel(r'$\langle r^{2}(t)\rangle$')
 
-    # Kinetic energy per particle vs. simulation time
-    if ke_per_frame is not None:
-        ax1.plot(times * settings.delta_t, ke_per_frame)
-        ax1.set_xlabel("Time t")
-        ax1.set_ylabel(r"$\langle E_\text{kin} \rangle$ per particle")
-        ax1.set_title("Kinetic Energy vs. Time")
-
-    # Mean‑squared displacement
-    plot_msd(ax2, lags, msd, dt=dt_snapshot)
-
-    # Slope estimate for long‑time diffusion (fit last third of the MSD curve)
-    fit_from = int(0.7 * len(lags))
-    coeffs = np.polyfit(lags[fit_from:] * dt_snapshot, msd[fit_from:], 1)
-    D_est = coeffs[0] / 6.0  # MSD ≈ 6 D t in 3‑D
-    ax2.plot(
-        lags * dt_snapshot,
-        coeffs[0] * lags * dt_snapshot + coeffs[1],
-        ls="--",
-        label=fr"fit ⇒ D ≈ {D_est:.3g}",
-    )
-    ax2.legend()
+    # quick linear fit of the tail (last 30 %)
+    start = int(0.7 * len(lags))
+    slope, intercept = np.polyfit(lags[start:] * dt_snap, msd[start:], 1)
+    D_est = slope / 6
+    ax_msd.plot(lags * dt_snap,
+                slope * lags * dt_snap + intercept,
+                '--', label=f'D ≈ {D_est:.3g}')
+    ax_msd.legend()
 
     if SAVE_FIG:
-        figfile = output_dir / "energy_msd.png"
-        fig.savefig(figfile, dpi=300)
-        logging.info("Figure saved to %s", figfile)
+        fig.savefig(outdir / 'energy_msd.png', dpi=300)
+        logging.info('Figure saved → %s', outdir / 'energy_msd.png')
 
-    logging.info("=== Task 2 completed successfully ===")
+    logging.info('=== Task 2 done – %d frames analysed ===', len(times))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

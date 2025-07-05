@@ -13,8 +13,7 @@ def init(Csi):
     N = 256
 
     global nsteps
-    #nsteps = 200000
-    nsteps = 2000
+    nsteps = 200000
 
     global nsave
     nsave = 10
@@ -78,6 +77,7 @@ def init(Csi):
 
     global tau_berendsen
     tau_berendsen = 1000*delta_t
+
 
 
 '''Some of the parameters are only needed for task 3 but they are included here anyway :)'''
