@@ -33,12 +33,7 @@ Jonas###############################
 
 - OVITO Simulations work with Initialization but yet there is no rescaling of the velocity
 
-ARRRRvid#################################
-Kommentar: Ich bin auch Donnerstag bis Montag fort, kann erst nächste Woche Sachen machen; Also Montag / Dienstag / Mittwoch
-
-Ich kann eine Struktur anlegen: eine übersichtliche main.py; Outputfolder system, bei dem bei jedem run ein neuer ordner erstellt wird; Logging;....
-
-
+Arvid#################################
 
 
 ##############Diskussion##################
