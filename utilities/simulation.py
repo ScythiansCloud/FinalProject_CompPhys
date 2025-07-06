@@ -4,7 +4,7 @@ from . import initialize
 from . import force
 from . import update
 import settings.settings_task2 as settings
-# import settings_task3 as settings
+import settings.settings_task3 as settings3
 from . import output
 import logging
 
@@ -84,3 +84,49 @@ def Simulation2(outdir, write, Traj_name, everyN): # forces turned off
                 output.WriteTrajectory3d(fileoutput_eq, i,x,y,z, settings)
                 output.WriteunwrappedState(fileoutput_eq_unwrapped,i,x,y,z,vx,vy,vz)
 
+
+
+def Simulation3(outdir, write, Traj_name, everyN): # forces turned off
+
+    # random seed for reproducibility
+    np.random.seed(settings3.random_seed)
+    x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings3.Cs, settings3.random_seed)
+    x,y,z, vx, vy, vz = update.update(True, x, y, z, vx, vy, vz, settings3.L, settings3.N, settings3.sig,
+                                      settings3.delta, settings3.A, settings3.m, settings3.Zprimesqrd,
+                                      settings3.lambda_B, settings3.kappa_D, settings3.kBT, settings3.xi,
+                                      settings3.delta_t, settings3.gaus_var, settings3.random_seed)
+    
+
+    if write:
+        fileoutput_eq = open(outdir / (Traj_name + str(everyN) + '_nsteps_' + str(settings3.nsteps)), "w")
+        fileoutput_eq_unwrapped = open(outdir / (Traj_name+ 'unwrapped'+ str(everyN) + '_nsteps_' + str(settings3.nsteps)), "w")
+        output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings3) 
+        output.WriteunwrappedState(fileoutput_eq_unwrapped,0,x,y,z,vx,vy,vz)
+        # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
+    
+    Ngr = 0
+    nbins = int(settings3.l/2 / settings3.dr)
+    hist = np.zeros(nbins) 
+    for i in tqdm(range(settings3.nsteps)):
+        x,y,z, vx, vy, vz = update.update(True, x, y, z, vx, vy, vz, settings3.L, settings3.N, settings3.sig,
+                                        settings3.delta, settings3.A, settings3.m, settings3.Zprimesqrd,
+                                        settings3.lambda_B, settings3.kappa_D, settings3.kBT, settings3.xi,
+                                        settings3.delta_t, settings3.gaus_var, settings3.random_seed)
+        
+        # save shit every n
+        if i % everyN == 0:
+            if write:
+                # logging.info(force.temperature(vx,vy,vz,settings3=settings3))
+                output.WriteTrajectory3d(fileoutput_eq, i,x,y,z, settings3)
+                output.WriteunwrappedState(fileoutput_eq_unwrapped,i,x,y,z,vx,vy,vz)
+
+
+            hist = update.update_hist(hist, x,y,z,
+                                0,settings3.L, 0,settings3.L,0,settings3.L,
+                                settings3.dr, settings3.N, settings3.L)
+            Ngr += 1 # another position
+
+        g = update.calcg(Ngr,hist, settings3.dr)
+
+                    
+    return g
