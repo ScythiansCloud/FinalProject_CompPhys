@@ -41,4 +41,47 @@ def update(TASK2, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd,
 
     return x,y,z,vx,vy,vz
 
+
+
+
+def compute_S_of_k_from_gr(g_of_r, dr, rho, k):
+    """
+    Given:
+      - g_of_r:  1D array of length nbins, the time‐averaged RDF g(r) for r in [0, L/2)
+      - dr:      bin width used to build g(r)
+      - rho:     number density N/V
+      - 
     
+    Returns:
+      - 
+    """
+    nbins = len(g_of_r)
+    # bin centers r_i = (i + 0.5) * dr for i=0..nbins-1
+    r_centers = (np.arange(nbins) + 0.5) * dr
+    
+    # integration
+    S_of_k = 1 + 4* np.pi * rho * np.sum(dr* (g_of_r-1) * r_centers**2 * np.sin(k*r_centers)/(k*r_centers) )
+    return S_of_k
+
+
+######### added by Jonas ###########
+def calcg(Ngr, hist, dr, rho, N):
+    r= r = np.arange(len(hist)) * dr    # hist goes up to l/2
+    nid = 4*np.pi *rho /3 * ((r+ dr)**3-r**3) # type: ignore
+    n = hist/ N /Ngr
+    return n/nid
+
+
+@njit(parallel=True)
+def update_hist(hist, x,y,z,xlo,xhi,ylo,yhi,zlo,zhi, dr, N, l):
+    l_half = (xhi - xlo) * 0.5
+    for i in prange(N-1):
+        for j in range(i+1,N):
+            rijx = force.pbc(x[i], x[j], xlo, xhi) # calculate pbc distance
+            rijy = force.pbc(y[i], y[j], ylo, yhi)
+            rijz = force.pbc(z[i], z[j], zlo, zhi)
+            r = np.sqrt(rijx**2 + rijy**2 + rijz**2)
+            if r > 0.0 and r < l_half:
+                bin = int(r / dr) # find the bin
+                hist[bin] += 2 # we are counting pairs
+    return hist
