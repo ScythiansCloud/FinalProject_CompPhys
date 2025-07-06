@@ -66,7 +66,9 @@ def init(Csi):
 
     global Zprime
     Zprime = Z*np.exp(kappa_D*sig/2)/(1+kappa_D*sig/2)
-
+    global Zprimesqrd
+    Zprimesqrd = Zprime*Zprime
+    
     global tau
     tau = sig*sig/(kBT)*xi
 

@@ -73,15 +73,15 @@ def calcg(Ngr, hist, dr, rho, N):
 
 
 @njit(parallel=True)
-def update_hist(hist, x,y,z,xlo,xhi,ylo,yhi,zlo,zhi, dr, N, l):
-    l_half = (xhi - xlo) * 0.5
+def update_hist(hist, x,y,z, dr, N, L):
+
     for i in prange(N-1):
         for j in range(i+1,N):
-            rijx = force.pbc(x[i], x[j], xlo, xhi) # calculate pbc distance
-            rijy = force.pbc(y[i], y[j], ylo, yhi)
-            rijz = force.pbc(z[i], z[j], zlo, zhi)
+            rijx = force.pbc(x[i], x[j], 0, L) # calculate pbc distance
+            rijy = force.pbc(y[i], y[j], 0, L)
+            rijz = force.pbc(z[i], z[j], 0, L)
             r = np.sqrt(rijx**2 + rijy**2 + rijz**2)
-            if r > 0.0 and r < l_half:
+            if r > 0.0 and r < L/2:
                 bin = int(r / dr) # find the bin
                 hist[bin] += 2 # we are counting pairs
     return hist

@@ -105,7 +105,7 @@ def Simulation3(outdir, write, Traj_name, everyN): # forces turned off
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
     
     Ngr = 0
-    nbins = int(settings3.l/2 / settings3.dr)
+    nbins = int(settings3.L/2 / settings3.dr)
     hist = np.zeros(nbins) 
     for i in tqdm(range(settings3.nsteps)):
         x,y,z, vx, vy, vz = update.update(True, x, y, z, vx, vy, vz, settings3.L, settings3.N, settings3.sig,
@@ -121,9 +121,7 @@ def Simulation3(outdir, write, Traj_name, everyN): # forces turned off
                 output.WriteunwrappedState(fileoutput_eq_unwrapped,i,x,y,z,vx,vy,vz)
 
 
-            hist = update.update_hist(hist, x,y,z,
-                                0,settings3.L, 0,settings3.L,0,settings3.L,
-                                settings3.dr, settings3.N, settings3.L)
+            hist = update.update_hist(hist, x,y,z, settings3.dr, settings3.N, settings3.L)
             Ngr += 1 # another position
 
         g = update.calcg(Ngr,hist, settings3.dr)
