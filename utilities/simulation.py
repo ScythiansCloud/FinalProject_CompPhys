@@ -80,7 +80,7 @@ def Simulation2(outdir, write, Traj_name, everyN): # forces turned off
         # save shit every n
         if i % everyN == 0:
             if write:
-                logging.info(force.temperature(vx,vy,vz,settings=settings))
+                # logging.info(force.temperature(vx,vy,vz,settings=settings))
                 output.WriteTrajectory3d(fileoutput_eq, i,x,y,z, settings)
                 output.WriteunwrappedState(fileoutput_eq_unwrapped,i,x,y,z,vx,vy,vz)
 
