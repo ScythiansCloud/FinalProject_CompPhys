@@ -36,71 +36,94 @@ def load_unwrapped_state(
     mass: float | None = None,
     n_particles: int,
     expected_frames: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
-    '''Read the trajectory produced by the simulation2 function
+):
+    data = np.loadtxt(filepath)
 
-    Returns:
-        times, positions, velocities, KE (optional)
-    '''
-    logging.info('Reading trajectory → %s', filepath)
+    times = data[0]
+    x = data[:, 1:settings.N+1]
+    y = data[:, 1+settings.N:settings.N*2+1]
+    z = data[:, 1+settings.N*2:1+settings.N*3]
+    vx = data[:, 1+settings.N*3:1+settings.N*4]
+    vy = data[:, 1+settings.N*4:1+settings.N*5]
+    vz = data[:, 1+settings.N*5:1+settings.N*6]
 
-    n_numbers = 1 + 6 * n_particles  # t + (x y z vx vy vz) * N
-    logging.debug('Need %d numbers per frame', n_numbers)
-
-    def tokens(line: str) -> list[str]:
-        # strip fancy formatting LAMMPS-style output might add
-        return (
-            line.replace('[', ' ')
-                .replace(']', ' ')
-                .replace(',', ' ')
-                .replace('x:', ' ').replace('y:', ' ').replace('z:', ' ')
-                .replace('vx:', ' ').replace('vy:', ' ').replace('vz:', ' ')
-                .split()
-        )
-
-    times, pos_chunks, vel_chunks, stash = [], [], [], []
-    frames = 0
-
-    with open(filepath) as fh:
-        for raw in fh:
-            if not raw.strip():
-                continue
-            stash.extend(tokens(raw))
-
-            # pull out complete frames as soon as we can
-            while len(stash) >= n_numbers:
-                frame, stash = stash[:n_numbers], stash[n_numbers:]
-                try:
-                    data = np.asarray(frame, float)
-                except ValueError:
-                    logging.warning('Bad frame starting with %s … skipped', frame[:6])
-                    continue
-
-                times.append(data[0])
-                pv = data[1:].reshape(n_particles, 6)
-                pos_chunks.append(pv[:, :3])
-                vel_chunks.append(pv[:, 3:])
-                frames += 1
-
-                if frames % LOG_EVERY == 0:
-                    pct = 100 * frames / expected_frames
-                    logging.info('Read %d / %d frames (%.1f %%)', frames, expected_frames, pct)
-
-    if stash:
-        logging.warning('Dropped %d stray numbers at EOF', len(stash))
-    if not frames:
-        raise RuntimeError('No usable frames – aborting.')
-
-    # stack into tidy arrays
-    positions  = np.stack(pos_chunks)
-    velocities = np.stack(vel_chunks)
-    times      = np.asarray(times)
-
-    ke = None
-    if mass is not None:
-        ke = 0.5 * mass * (velocities**2).sum(-1).mean(-1)  # ⟨v²⟩ per particle
+    positions = np.stack((x, y, z), axis=-1) # (t,N,3) weis nicht ob das die shape ist mit der du garbeitet hast...
+    velocities = np.stack((vx, vy, vz), axis=-1)
+    ke =( vx**2+vy**2+vz**2)*1/2 # mass = 1 spuckt irgendwie sonst einen fehler aus
 
     return times, positions, velocities, ke
+
+# def load_unwrapped_state(
+#     filepath: Path,
+#     *,
+#     mass: float | None = None,
+#     n_particles: int,
+#     expected_frames: int,
+# ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
+#     '''Read the trajectory produced by the simulation2 function
+
+#     Returns:
+#         times, positions, velocities, KE (optional)
+#     '''
+#     logging.info('Reading trajectory → %s', filepath)
+
+#     n_numbers = 1 + 6 * n_particles  # t + (x y z vx vy vz) * N
+#     logging.debug('Need %d numbers per frame', n_numbers)
+
+#     def tokens(line: str) -> list[str]:
+#         # strip fancy formatting LAMMPS-style output might add
+#         return (
+#             line.replace('[', ' ')
+#                 .replace(']', ' ')
+#                 .replace(',', ' ')
+#                 .replace('x:', ' ').replace('y:', ' ').replace('z:', ' ')
+#                 .replace('vx:', ' ').replace('vy:', ' ').replace('vz:', ' ')
+#                 .split()
+#         )
+
+#     times, pos_chunks, vel_chunks, stash = [], [], [], []
+#     frames = 0
+
+#     with open(filepath) as fh:
+#         for raw in fh:
+#             if not raw.strip():
+#                 continue
+#             stash.extend(tokens(raw))
+
+#             # pull out complete frames as soon as we can
+#             while len(stash) >= n_numbers:
+#                 frame, stash = stash[:n_numbers], stash[n_numbers:]
+#                 try:
+#                     data = np.asarray(frame, float)
+#                 except ValueError:
+#                     logging.warning('Bad frame starting with %s … skipped', frame[:6])
+#                     continue
+
+#                 times.append(data[0])
+#                 pv = data[1:].reshape(n_particles, 6)
+#                 pos_chunks.append(pv[:, :3])
+#                 vel_chunks.append(pv[:, 3:])
+#                 frames += 1
+
+#                 if frames % LOG_EVERY == 0:
+#                     pct = 100 * frames / expected_frames
+#                     logging.info('Read %d / %d frames (%.1f %%)', frames, expected_frames, pct)
+
+#     if stash:
+#         logging.warning('Dropped %d stray numbers at EOF', len(stash))
+#     if not frames:
+#         raise RuntimeError('No usable frames – aborting.')
+
+#     # stack into tidy arrays
+#     positions  = np.stack(pos_chunks)
+#     velocities = np.stack(vel_chunks)
+#     times      = np.asarray(times)
+
+#     ke = None
+#     if mass is not None:
+#         ke = 0.5 * mass * (velocities**2).sum(-1).mean(-1)  # ⟨v²⟩ per particle
+
+#     return times, positions, velocities, ke
 
 
 # ─── main ────────────────────────────────────────────────────────────────────
