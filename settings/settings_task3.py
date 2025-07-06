@@ -13,7 +13,7 @@ def init(Csi):
     N = 343
 
     global nsteps
-    nsteps = 200000
+    nsteps = 8000           # nsteps != 200000
 
     global nsave
     nsave = 10
@@ -68,7 +68,7 @@ def init(Csi):
     Zprime = Z*np.exp(kappa_D*sig/2)/(1+kappa_D*sig/2)
     global Zprimesqrd
     Zprimesqrd = Zprime*Zprime
-    
+
     global tau
     tau = sig*sig/(kBT)*xi
 

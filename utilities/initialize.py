@@ -7,12 +7,12 @@
 
 # imports
 import numpy as np
-import settings.settings_task2 as settings
+# import settings.settings_task2 as settings                 # should not be hardcoded here
 #import settings_task3 as settings
 from numba import njit
 
  
-def InitializeAtoms(Csi, random_seed):
+def InitializeAtoms(Csi, random_seed, settings):
     settings.init(Csi)
     # np.random.seed(settings.random_seed)    
 
@@ -78,7 +78,7 @@ def InitializeAtoms(Csi, random_seed):
     # svx = np.sum(vx)
     
     # rescale the velocity to the desired temperature
-    kbT_random = Thermalenergy(vx, vy, vz)
+    kbT_random = Thermalenergy(vx, vy, vz, settings)
     vx, vy, vz = rescalevelocity(vx, vy, vz, settings.kBT, kbT_random)
     
     # cancel the linear momentum
@@ -107,7 +107,7 @@ def pbc(xi, xj, xlo, xhi):
     return rij
 
 
-def Thermalenergy(vx, vy, vz):
+def Thermalenergy(vx, vy, vz, settings):
     vsq = np.sum(vx*vx + vy*vy + vz*vz)
 
     return vsq/settings.N*settings.m/3 # == kbT
@@ -119,19 +119,19 @@ def rescalevelocity(vx, vy, vz, kbT1, kbT2):
     vz = vz * fac
     return vx, vy, vz      
 
-if __name__ == '__main__':
-    settings.init(10)
-    #print(InitializeAtoms()[0])
+# if __name__ == '__main__':
+#     settings.init(10)
+#     #print(InitializeAtoms()[0])
 
-    import matplotlib.pyplot as plt
-    x, y, z, _, _, _ = InitializeAtoms(10,42)
-    # plt.figure(figsize=[10,20])
-    plt.scatter(y,z)
-    #plt.scatter(settings.deltaxyz/2, settings.deltaxyz/2)
-    # plt.scatter(settings.deltaxyz, settings.deltaxyz-settings.bond_len/2)
-    plt.xlim([0, settings.L])
-    plt.ylim([0, settings.L])
-    plt.show()                  
+#     import matplotlib.pyplot as plt
+#     x, y, z, _, _, _ = InitializeAtoms(10,42)
+#     # plt.figure(figsize=[10,20])
+#     plt.scatter(y,z)
+#     #plt.scatter(settings.deltaxyz/2, settings.deltaxyz/2)
+#     # plt.scatter(settings.deltaxyz, settings.deltaxyz-settings.bond_len/2)
+#     plt.xlim([0, settings.L])
+#     plt.ylim([0, settings.L])
+#     plt.show()                  
     
 
     # test
