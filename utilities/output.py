@@ -18,5 +18,10 @@ def WriteTrajectory3d(fileoutput, itime, x, y, z, settings):
         fileoutput.write("%i %i %e %e %e \n" % (i, i, x[i] % settings.L, y[i] % settings.L, z[i] % (settings.L)))
 
 def WriteunwrappedState(fileoutput, itime, x,y,z,vx,vy,vz):
-    fileoutput.write(str(itime)+ ' '+ str(x)+' '+ str(y)+' '+ str(z)+' '+ str(vx)+' '+ str(vy)+' '+ str(vz)+ '\n')
-    
+    N = len(x)
+
+    fileoutput.write(str(itime))
+    for i in range(N):
+        fileoutput.write( ' '+ str(x[i])+' '+ str(y[i])+' '+ str(z[i])+' '+ str(vx[i])+' '+ str(vy[i])+' '+ str(vz[i]))
+    fileoutput.write('\n')
+     
