@@ -1,61 +1,90 @@
 import numpy as np
+from numba import njit, prange
 
 __all__ = ["compute_msd", "plot_msd"]
 
-
+# --------------------------------------------------------------------------
+#  A thin Python wrapper for validation & dtype conversion
+# --------------------------------------------------------------------------
 def compute_msd(positions, max_lag=None, box_length=None):
-    """Vectorised Mean‑Squared Displacement (MSD)
+    """
+    Mean-squared displacement without FFT, but JIT-accelerated with Numba.
 
     Parameters
     ----------
-    positions : ndarray, shape (n_frames, n_particles, dim)
-        Un‑wrapped particle coordinates.
-    max_lag : int, optional
-        Maximum lag *in saved snapshots* for which the MSD is evaluated.
-        Defaults to ``n_frames // 2`` (recommended in the assignment).
-    box_length : float or array_like, optional
-        If given, periodic boundary conditions are assumed and the minimum‑
-        image convention is applied before squaring the displacement.
-
-    Returns
-    -------
-    lags : ndarray, shape (max_lag,)
-        Integer time lags (units: snapshots).
-    msd : ndarray, shape (max_lag,)
-        ⟨|r(t'+t) − r(t')|²⟩ averaged over *all* particles and time origins.
+    positions : float array, shape (n_frames, n_particles, dim)
+        **Unwrapped** coordinates.
+    max_lag   : int, optional
+        Longest time lag to evaluate.  Default = n_frames // 2.
+    box_length : None or float or sequence of floats
+        Box lengths for minimum-image convention.  If None → no PBCs.
     """
-
-    # Ensure a floating, contiguous array — **Numba‑friendly** dtype spec
-    positions = np.ascontiguousarray(positions, dtype=np.float64)
-    if positions.ndim != 3:
+    # --- basic checks done outside Numba ----------------------------------
+    pos = np.ascontiguousarray(positions, dtype=np.float64)
+    if pos.ndim != 3:
         raise ValueError("`positions` must have shape (n_frames, n_particles, dim)")
 
-    n_frames, n_particles, dim = positions.shape
-
+    n_frames, _, dim = pos.shape
     if max_lag is None:
         max_lag = n_frames // 2
-    if max_lag < 1 or max_lag >= n_frames:
+    if not (1 <= max_lag < n_frames):
         raise ValueError("`max_lag` must satisfy 1 ≤ max_lag < n_frames")
 
-    # Box length handling for PBCs
-    if box_length is not None:
-        box_length = np.asarray(box_length, dtype=np.float64)
-        if box_length.ndim == 0:
-            box_length = np.full(dim, box_length, dtype=np.float64)
-        elif box_length.shape != (dim,):
+    # broadcast / validate box length
+    if box_length is None:
+        bl = np.zeros(dim, dtype=np.float64)   # sentinel → no PBC correction
+    else:
+        bl = np.asarray(box_length, dtype=np.float64)
+        if bl.ndim == 0:
+            bl = np.full(dim, bl, dtype=np.float64)
+        elif bl.shape != (dim,):
             raise ValueError("`box_length` must be scalar or have shape (dim,)")
 
-    lags = np.arange(1, max_lag + 1, dtype=np.int64)
-    msd = np.empty_like(lags, dtype=np.float64)
+    # call the fast kernel
+    return _compute_msd_nb(pos, max_lag, bl)
 
-    for i, lag in enumerate(lags):
-        disp = positions[lag:] - positions[:-lag]
-        if box_length is not None:
-            disp -= np.round(disp / box_length) * box_length  # minimum‑image
-        sq_disp = (disp ** 2).sum(axis=-1)  # over Cartesian components
-        msd[i] = sq_disp.mean()            # ⟨…⟩ over particles & time origins
+
+# --------------------------------------------------------------------------
+#  Fast kernel – nopython, parallel
+# --------------------------------------------------------------------------
+@njit(parallel=True, fastmath=True)
+def _compute_msd_nb(pos, max_lag, box_len):
+    n_frames, n_particles, dim = pos.shape
+    msd   = np.empty(max_lag, dtype=np.float64)
+    lags  = np.arange(1, max_lag + 1, dtype=np.int64)
+
+    use_pbc = False
+    for d in range(dim):
+        if box_len[d] > 0.0:          # 0 means “no PBC” (see wrapper)
+            use_pbc = True
+            break
+
+    for i in prange(max_lag):        # prange over integer range → OK
+        lag   = i + 1
+        accum = 0.0
+        norm  = (n_frames - lag) * n_particles   # number of displacement vectors
+
+        for t in range(n_frames - lag):
+            for p in range(n_particles):
+                # displacement vector
+                dx = pos[t + lag, p, 0] - pos[t, p, 0]
+                dy = pos[t + lag, p, 1] - pos[t, p, 1]
+                dz = pos[t + lag, p, 2] - pos[t, p, 2]
+
+                if use_pbc:
+                    if box_len[0] > 0.0:
+                        dx -= np.round(dx / box_len[0]) * box_len[0]
+                    if dim > 1 and box_len[1] > 0.0:
+                        dy -= np.round(dy / box_len[1]) * box_len[1]
+                    if dim > 2 and box_len[2] > 0.0:
+                        dz -= np.round(dz / box_len[2]) * box_len[2]
+
+                accum += dx*dx + dy*dy + dz*dz
+
+        msd[i] = accum / norm
 
     return lags, msd
+
 
 
 def plot_msd(ax, lags, msd, dt=1.0, **kwargs):
