@@ -22,6 +22,16 @@ def WriteunwrappedState(fileoutput, itime, x,y,z,vx,vy,vz):
 
     fileoutput.write(str(itime))
     for i in range(N):
-        fileoutput.write( ' '+ str(x[i])+' '+ str(y[i])+' '+ str(z[i])+' '+ str(vx[i])+' '+ str(vy[i])+' '+ str(vz[i]))
+        fileoutput.write( ' '+ str(x[i]))
+    for i in range(N):
+        fileoutput.write( ' '+ str(y[i]))
+    for i in range(N):
+        fileoutput.write( ' '+ str(z[i]))
+    for i in range(N):
+        fileoutput.write( ' '+ str(vx[i]))
+    for i in range(N):
+        fileoutput.write( ' '+ str(vy[i]))
+    for i in range(N):
+        fileoutput.write( ' '+ str(vz[i]))
     fileoutput.write('\n')
      
