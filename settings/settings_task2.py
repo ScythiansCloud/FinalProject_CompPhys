@@ -13,7 +13,7 @@ def init(Csi):
     N = 256
 
     global nsteps
-    nsteps = 20000 #200000
+    nsteps = 200000
 
     global nsave
     nsave = 10
@@ -42,7 +42,7 @@ def init(Csi):
     Z = 50
 
     global gaus_var
-    gaus_var = np.sqrt(2)
+    gaus_var = 1
 
     ## derived constants
 
