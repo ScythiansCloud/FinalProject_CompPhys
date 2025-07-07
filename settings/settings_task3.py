@@ -15,10 +15,12 @@ def init(Csi):
     global nsteps
     nsteps = 8000           # nsteps != 200000
 
+    global nsteps_eq
+    nsteps_eq = 8000
+
     global nsave
     nsave = 10
 
-    # constants
     global kBT
     kBT = 1
 
