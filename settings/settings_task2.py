@@ -42,7 +42,7 @@ def init(Csi):
     Z = 50
 
     global gaus_var
-    gaus_var = 1
+    gaus_var = np.sqrt(2)
 
     ## derived constants
 
