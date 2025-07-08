@@ -209,6 +209,8 @@ def main() -> None:
     ax_msd.plot(lags * dt_snap,
                 slope * lags * dt_snap + intercept,
                 '--', label=f'D ≈ {D_est:.3g}')
+    ax_msd.set_xscale('log')
+    ax_msd.set_yscale('log')
     ax_msd.legend()
 
     if SAVE_FIG:
