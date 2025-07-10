@@ -12,8 +12,11 @@ def init(Csi):
     global N 
     N = 343
 
-    global nsteps
-    nsteps = 8000           # nsteps != 200000
+    global nsteps_eq
+    nsteps_eq = 100_00       # nsetps_eq != 100 000 for equilibration run
+
+    global nsteps   
+    nsteps = 100_00           # nsteps != 100 000 for production run
 
     global nsave
     nsave = 10
