@@ -18,10 +18,12 @@ def init(Csi):
     global nsteps   
     nsteps = 100_00           # nsteps != 100 000 for production run
 
+    global nsteps_eq
+    nsteps_eq = 8000
+
     global nsave
     nsave = 10
 
-    # constants
     global kBT
     kBT = 1
 
