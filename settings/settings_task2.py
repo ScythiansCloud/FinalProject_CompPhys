@@ -13,7 +13,7 @@ def init(Csi):
     N = 256
 
     global nsteps
-    nsteps = 2000
+    nsteps = 200000
 
     global nsave
     nsave = 10

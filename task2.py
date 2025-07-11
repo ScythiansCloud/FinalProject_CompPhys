@@ -72,13 +72,38 @@ def main():
     #plot everything
     plt.figure(dpi= 600)
     plt.title('Kinetic Energy')
-    plt.xlabel(r'Time $t\,[\tau_{LD}]$')
+    plt.xlabel(r'$t\,[\tau_{LD}]$')
     plt.ylabel(r'$\langle E_{kin}\rangle$ / particle')
     plt.plot(times * settings.delta_t, ke, color = 'black', label=r'K(t)')
     plt.legend()
     if SAVE_FIG:
         plt.savefig(outdir / 'energy.png')
         logging.info('Figure saved → %s', outdir / 'energya.png')
+
+    plt.figure(dpi=600)
+    plt.title('Mean-square-distance')
+    plt.xlabel(r'Lag-time $[\tau_{LD}]$')
+    plt.ylabel(r'$\langle r^{2}(t)\rangle$')
+    plt.plot(lags,msd,color= 'black', label= 'Mean-Square-Distance')
+    # fit balistic, and diffusive regime
+    pass
+    plt.legend()
+
+    plt.xscale('log')
+    plt.yscale('log')
+    if SAVE_FIG:
+        plt.savefig(outdir / 'msd.png', dpi=300)
+        logging.info('Figure saved → %s', outdir / 'msd.png')
+
+    
+
+
+    #     t = lags * dt
+    # line, = ax.plot(t, msd, **kwargs)
+    # ax.set_xlabel(r"Time $t\,[\tau_{\mathrm{LD}}]$")
+    # ax.set_ylabel(r"$\langle r^{2}(t) \rangle\,[\sigma^{2}]$")
+    # ax.set_title("Mean‑Squared Displacement")
+    # return line
 
 
 
