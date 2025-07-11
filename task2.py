@@ -20,14 +20,14 @@ from utilities import utils
 import settings.settings_task2 as settings
 
 
-# ─── tweak-here ──────────────────────────────────────────────────────────────
-TRAJ_NAME = "Task2"   # file prefix
-EVERY_N   = 10        # store a frame every N MD steps
-SAVE_FIG  = True      # write the PNG at the end?
-LOG_EVERY = 2_000     # print read progress every X frames
-# ─────────────────────────────────────────────────────────────────────────────
+# settings
+settings.init(10)
+traj_name = "Task2"  
+nsave   = settings.nsave
+SAVE_FIG  = True   
+log_every = 2000 
 
-
+############################
 def load_unwrapped_state(filepath, mass, N, ):
     data = np.loadtxt(filepath)
 
@@ -49,27 +49,39 @@ def load_unwrapped_state(filepath, mass, N, ):
 
 
 
-# ─── main ────────────────────────────────────────────────────────────────────
-def main() -> None:
-    # 1) folders + logger
+#################################
+def main():
+    # init stuff
     outdir = utils.create_output_directory()
     utils.setup_logging(outdir)
-    logging.info('=== Task 2 started ===')
+    logging.info('Task 2 started')
 
-    # 2) run the tiny LD sim
-    settings.init(1)  # salt conc. irrelevant here
-    Simulation2(outdir, write=True, Traj_name=TRAJ_NAME, everyN=EVERY_N, random_seed=settings.random_seed, settings=settings)
+    # run simulation
+    settings.init(1)  # concentration irrelevant
+    Simulation2(outdir, write=True, Traj_name=traj_name, everyN=nsave, random_seed=settings.random_seed, settings=settings)
 
-    # 3) crunch the trajectory
-    traj_file = outdir / f'{TRAJ_NAME}unwrapped{EVERY_N}_nsteps_{settings.nsteps}'
-    n_frames  = settings.nsteps // EVERY_N + 1  # +1 for t=0
+    #calculate msd
+    traj_file = outdir / f'{traj_name}unwrapped{nsave}_nsteps_{settings.nsteps}' # using 'path' type instead of strings
+
 
     times, pos, vel, ke = load_unwrapped_state(traj_file, settings.m, settings.N)
 
-    dt_snap  = EVERY_N * settings.delta_t
+    dt_snap  = nsave * settings.delta_t
     lags, msd = compute_msd(pos, max_lag=len(times)//2)
 
-    # 4) plots
+    #plot everything
+    plt.figure(dpi= 600)
+    plt.title('Kinetic Energy')
+    plt.xlabel(r'Time $t\,[\tau_{LD}]$')
+    plt.ylabel(r'$\langle E_{kin}\rangle$ / particle')
+    plt.plot(times * settings.delta_t, ke, color = 'black', label=r'K(t)')
+    plt.legend()
+    if SAVE_FIG:
+        plt.savefig(outdir / 'energy.png')
+        logging.info('Figure saved → %s', outdir / 'energya.png')
+
+
+
     fig, (ax_ke, ax_msd) = plt.subplots(2, 1, figsize=(6, 8), constrained_layout=True)
 
     # Kinetic energy
@@ -196,7 +208,7 @@ if __name__ == '__main__':
 #                 vel_chunks.append(pv[:, 3:])
 #                 frames += 1
 
-#                 if frames % LOG_EVERY == 0:
+#                 if frames % log_every == 0:
 #                     pct = 100 * frames / expected_frames
 #                     logging.info('Read %d / %d frames (%.1f %%)', frames, expected_frames, pct)
 
