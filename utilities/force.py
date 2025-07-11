@@ -25,12 +25,11 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
             r2 = rijx * rijx + rijy * rijy + rijz * rijz
             r = np.sqrt(r2)
 
-            if r > (sig + delta):       # Jonas: Denke wir könnten hier auf noch einen cutoff hinzufügen, 
-                                        # damit wir nicht zu viele Kräfte berechnen müssen
+            if r > (sig + delta):
                 '''calculate vdw + elec interaction'''
 
-                VDW = A*sig/(24*m*(r-sig)**2)   # Jonas: habe ich auch so aber ohne das m. Warum sollte das da sein?
-                EL = -Zprimesqrd*lambda_B*np.exp(-kappa_D*r)*(1/r+kappa_D)/(m*r**2) # Jonas: habe ich auch so nur wieder ohne masse m
+                VDW = A*sig/(24*m*(r-sig)**2)   
+                EL = -Zprimesqrd*lambda_B*np.exp(-kappa_D*r)*(1/r+kappa_D)/(m*r**2) 
                 SUM = VDW + EL
 
                 fx[i] -= SUM* rijx
