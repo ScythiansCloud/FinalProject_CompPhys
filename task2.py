@@ -27,42 +27,26 @@ SAVE_FIG  = True      # write the PNG at the end?
 LOG_EVERY = 2_000     # print read progress every X frames
 # ─────────────────────────────────────────────────────────────────────────────
 
-def load_unwrapped_state(
-    filepath: Path,
-    *,
-    mass: float | None,
-    n_particles: int,
-    expected_frames: int,
-):
+
+def load_unwrapped_state(filepath, mass, N, ):
     data = np.loadtxt(filepath)
 
-    # Basic sanity check
-    if data.shape[0] != expected_frames:
-        logging.warning(
-            "Expected %d frames but found %d in %s",
-            expected_frames, data.shape[0], filepath,
-        )
-
-    # 1) split the big table --------------------------------------------------
-    times = data[:, 0]                                   # (f,)
-
-    blk = n_particles
-    x  = data[:, 1          : 1 + blk]
-    y  = data[:, 1 + blk    : 1 + 2*blk]
-    z  = data[:, 1 + 2*blk  : 1 + 3*blk]
-    vx = data[:, 1 + 3*blk  : 1 + 4*blk]
-    vy = data[:, 1 + 4*blk  : 1 + 5*blk]
-    vz = data[:, 1 + 5*blk  : 1 + 6*blk]
+    times = data[:, 0]
+    x  = data[:, 1          : 1 + N] # hardcoded for 3D 
+    y  = data[:, 1 + N   : 1 + 2*N]
+    z  = data[:, 1 + 2*N  : 1 + 3*N]
+    vx = data[:, 1 + 3*N  : 1 + 4*N]
+    vy = data[:, 1 + 4*N : 1 + 5*N]
+    vz = data[:, 1 + 5*N  : 1 + 6*N]
 
     positions  = np.stack((x, y, z),  axis=-1)           # (f, N, 3)
     velocities = np.stack((vx, vy, vz), axis=-1)         # (f, N, 3)
 
-    # 2) kinetic energy per particle, then ⟨⋯⟩ over all particles -------------
-    m = 1.0 if mass is None else mass
-    ke = 0.5 * m * (velocities**2).sum(-1)   # (f, N) – v² per particle
-    ke = ke.mean(-1)                         # (f,)   – ⟨E_kin⟩
+    ke = 0.5 * mass * (velocities**2).sum(-1)  
+    ke = ke.mean(-1)                    
 
     return times, positions, velocities, ke
+
 
 
 # ─── main ────────────────────────────────────────────────────────────────────
@@ -80,12 +64,7 @@ def main() -> None:
     traj_file = outdir / f'{TRAJ_NAME}unwrapped{EVERY_N}_nsteps_{settings.nsteps}'
     n_frames  = settings.nsteps // EVERY_N + 1  # +1 for t=0
 
-    times, pos, vel, ke = load_unwrapped_state(
-        traj_file,
-        mass=settings.m,
-        n_particles=settings.N,
-        expected_frames=n_frames,
-    )
+    times, pos, vel, ke = load_unwrapped_state(traj_file, settings.m, settings.N)
 
     dt_snap  = EVERY_N * settings.delta_t
     lags, msd = compute_msd(pos, max_lag=len(times)//2)
@@ -234,5 +213,42 @@ if __name__ == '__main__':
 #     ke = None
 #     if mass is not None:
 #         ke = 0.5 * mass * (velocities**2).sum(-1).mean(-1)  # ⟨v²⟩ per particle
+
+#     return times, positions, velocities, ke
+
+#def load_unwrapped_state(
+#     filepath: Path,
+#     *,
+#     mass: float | None,
+#     n_particles: int,
+#     expected_frames: int,
+# ):
+#     data = np.loadtxt(filepath)
+
+#     # Basic sanity check
+#     if data.shape[0] != expected_frames:
+#         logging.warning(
+#             "Expected %d frames but found %d in %s",
+#             expected_frames, data.shape[0], filepath,
+#         )
+
+#     # 1) split the big table --------------------------------------------------
+#     times = data[:, 0]                                   # (f,)
+
+#     blk = n_particles
+#     x  = data[:, 1          : 1 + blk]
+#     y  = data[:, 1 + blk    : 1 + 2*blk]
+#     z  = data[:, 1 + 2*blk  : 1 + 3*blk]
+#     vx = data[:, 1 + 3*blk  : 1 + 4*blk]
+#     vy = data[:, 1 + 4*blk  : 1 + 5*blk]
+#     vz = data[:, 1 + 5*blk  : 1 + 6*blk]
+
+#     positions  = np.stack((x, y, z),  axis=-1)           # (f, N, 3)
+#     velocities = np.stack((vx, vy, vz), axis=-1)         # (f, N, 3)
+
+#     # 2) kinetic energy per particle, then ⟨⋯⟩ over all particles -------------
+#     m = 1.0 if mass is None else mass
+#     ke = 0.5 * m * (velocities**2).sum(-1)   # (f, N) – v² per particle
+#     ke = ke.mean(-1)                         # (f,)   – ⟨E_kin⟩
 
 #     return times, positions, velocities, ke
