@@ -18,6 +18,7 @@ from utilities.simulation import Simulation2
 from utilities.msd import compute_msd, plot_msd
 from utilities import utils
 import settings.settings_task2 as settings
+from scipy.optimize import curve_fit
 
 
 # settings
@@ -29,7 +30,7 @@ log_every = 2000
 
 ############################
 def load_unwrapped_state(filepath, mass, N, ):
-    data = np.loadtxt(filepath)
+    data = np.loadtxt(filepath) # type: ignore
 
     times = data[:, 0]
     x  = data[:, 1          : 1 + N] # hardcoded for 3D 
@@ -46,6 +47,13 @@ def load_unwrapped_state(filepath, mass, N, ):
     ke = ke.mean(-1)                    
 
     return times, positions, velocities, ke
+
+
+def parabola(t, a):#, b):
+    return a * t**2# + b
+
+def lin(t, m, c):
+    return m * t + c
 
 
 
@@ -70,6 +78,7 @@ def main():
     lags, msd = compute_msd(pos, max_lag=len(times)//2)
 
     #plot everything
+    tlags = lags * dt_snap
     plt.figure(dpi= 600)
     plt.title('Kinetic Energy')
     plt.xlabel(r'$t\,[\tau_{LD}]$')
@@ -84,9 +93,20 @@ def main():
     plt.title('Mean-square-distance')
     plt.xlabel(r'Lag-time $[\tau_{LD}]$')
     plt.ylabel(r'$\langle r^{2}(t)\rangle$')
-    plt.plot(lags,msd,color= 'black', label= 'Mean-Square-Distance')
+    plt.plot(tlags,msd,color= 'black', label= 'Mean-Square-Distance')
     # fit balistic, and diffusive regime
-    pass
+    popt, _ = curve_fit(lin, lags[int(0.7 * len(lags)):] * dt_snap, msd[int(0.7 * len(lags)):])
+    m, c = popt[0], popt[1]
+    D = m / 6
+
+    plt.plot(tlags[int(0.07 * len(lags)):], lin(tlags[int(0.07 * len(lags)):], m, c), '--', color = 'red', label=f'Diffusive Regime; D = {round(D,3)}')
+
+
+    popt2, _ = curve_fit(parabola,lags[:int(0.001 * len(lags))] * dt_snap, msd[:int(0.001 * len(lags)):])
+    a = popt2[0]#, popt2[1]
+    plt.plot(tlags[:int(0.05 * len(lags))], parabola(tlags[:int(0.05 * len(lags))],a)[:int(0.05 * len(lags))], '--', color= 'blue', label=f'Ballistic regime')
+
+
     plt.legend()
 
     plt.xscale('log')
@@ -94,6 +114,9 @@ def main():
     if SAVE_FIG:
         plt.savefig(outdir / 'msd.png', dpi=300)
         logging.info('Figure saved → %s', outdir / 'msd.png')
+
+    logging.info('Fit begin diff: '+str(tlags[int(0.7 * len(lags))]))
+    logging.info('Fit ende ball: '+ str( tlags[int(0.001 * len(lags))]))
 
     
 
@@ -107,33 +130,33 @@ def main():
 
 
 
-    fig, (ax_ke, ax_msd) = plt.subplots(2, 1, figsize=(6, 8), constrained_layout=True)
+    # fig, (ax_ke, ax_msd) = plt.subplots(2, 1, figsize=(6, 8), constrained_layout=True)
 
-    # Kinetic energy
-    ax_ke.plot(times * settings.delta_t, ke)
-    ax_ke.set_xlabel(r'Time $t\,[\tau_{LD}]$')
-    ax_ke.set_ylabel(r'$\langle E_{kin}\rangle$ / particle')
-    ax_ke.set_title('Kinetic Energy')
+    # # Kinetic energy
+    # ax_ke.plot(times * settings.delta_t, ke)
+    # ax_ke.set_xlabel(r'Time $t\,[\tau_{LD}]$')
+    # ax_ke.set_ylabel(r'$\langle E_{kin}\rangle$ / particle')
+    # ax_ke.set_title('Kinetic Energy')
 
-    # MSD
-    plot_msd(ax_msd, lags, msd, dt=dt_snap)
-    ax_msd.set_xlabel(r'Time $t\,[\tau_{LD}]$')
-    ax_msd.set_ylabel(r'$\langle r^{2}(t)\rangle$')
+    # # MSD
+    # plot_msd(ax_msd, lags, msd, dt=dt_snap)
+    # ax_msd.set_xlabel(r'Time $t\,[\tau_{LD}]$')
+    # ax_msd.set_ylabel(r'$\langle r^{2}(t)\rangle$')
 
-    # quick linear fit of the tail (last 30 %)
-    start = int(0.7 * len(lags))
-    slope, intercept = np.polyfit(lags[start:] * dt_snap, msd[start:], 1)
-    D_est = slope / 6
-    ax_msd.plot(lags * dt_snap,
-                slope * lags * dt_snap + intercept,
-                '--', label=f'D ≈ {D_est:.3g}')
-    ax_msd.set_xscale('log')
-    ax_msd.set_yscale('log')
-    ax_msd.legend()
+    # # quick linear fit of the tail (last 30 %)
+    # start = int(0.7 * len(lags))
+    # slope, intercept = np.polyfit(lags[start:] * dt_snap, msd[start:], 1)
+    # D_est = slope / 6
+    # ax_msd.plot(lags * dt_snap,
+    #             slope * lags * dt_snap + intercept,
+    #             '--', label=f'D ≈ {D_est:.3g}')
+    # ax_msd.set_xscale('log')
+    # ax_msd.set_yscale('log')
+    # ax_msd.legend()
 
-    if SAVE_FIG:
-        fig.savefig(outdir / 'energy_msd.png', dpi=300)
-        logging.info('Figure saved → %s', outdir / 'energy_msd.png')
+    # if SAVE_FIG:
+    #     fig.savefig(outdir / 'energy_msd.png', dpi=300)
+    #     logging.info('Figure saved → %s', outdir / 'energy_msd.png')
 
     logging.info('=== Task 2 done – %d frames analysed ===', len(times))
 
