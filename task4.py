@@ -135,7 +135,7 @@ def compute_structure_factor(r: np.ndarray, g: np.ndarray, rho: float) -> tuple[
 
 
 def analyse_msd(unwrapped: np.ndarray, dt_snap: float) -> tuple[np.ndarray, np.ndarray, float]:
-    lags, msd = compute_msd(unwrapped, max_lag=len(unwrapped) // 2)
+    lags, msd = compute_msd(unwrapped)
     t = lags * dt_snap
     slope, _ = np.polyfit(t[int(0.7 * len(t)):], msd[int(0.7 * len(t)):], 1)
     D_est = slope / 6

@@ -113,27 +113,13 @@ def _compute_msd_nb(pos, max_lag, box_len):
 
 
 
-# def plot_msd(ax, lags, msd, dt=1.0, **kwargs):
-#     """Quick Matplotlib helper.
-
-#     Parameters
-#     ----------
-#     ax : matplotlib.axes.Axes
-#     lags, msd : ndarray
-#         Output of :func:`compute_msd`.
-#     dt : float, optional
-#         Time per *saved* snapshot.
-#     **kwargs :
-#         Passed straight to :pycode:`ax.plot()`.
-#     """
-#     import matplotlib.pyplot as plt  # local import avoids hard dependency
-
-#     t = lags * dt
-#     line, = ax.plot(t, msd, **kwargs)
-#     ax.set_xlabel(r"Time $t\,[\tau_{\mathrm{LD}}]$")
-#     ax.set_ylabel(r"$\langle r^{2}(t) \rangle\,[\sigma^{2}]$")
-#     ax.set_title("Mean‑Squared Displacement")
-#     return line
+def plot_msd(ax, lags, msd, dt=1.0, **kwargs):
+    t = lags * dt
+    line, = ax.plot(t, msd, **kwargs)
+    ax.set_xlabel(r"Time $t\,[\tau_{\mathrm{LD}}]$")
+    ax.set_ylabel(r"$\langle r^{2}(t) \rangle\,[\sigma^{2}]$")
+    ax.set_title("Mean‑Squared Displacement")
+    return line
 
 
 # if __name__ == "__main__":
