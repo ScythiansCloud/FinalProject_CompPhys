@@ -61,7 +61,7 @@ def init(Csi):
     lambda_B = sig/100
     
     global kappa_D
-    kappa_D = np.sqrt(8*np.pi *lambda_B* Csi  )
+    kappa_D = np.sqrt(8*np.pi *lambda_B* Cs)
 
     global A 
     A = 0.1*kBT
