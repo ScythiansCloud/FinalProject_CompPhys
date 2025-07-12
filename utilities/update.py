@@ -42,27 +42,22 @@ def update(TASK2, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd,
     return x,y,z,vx,vy,vz
 
 
-
-
-def compute_S_of_k_from_gr(g_of_r, dr, rho, k):
+def compute_S_of_k_from_gr(g_of_r: np.ndarray,dr: float, rho: float, k: np.ndarray,) -> np.ndarray:
     """
     Given:
       - g_of_r:  1D array of length nbins, the time‐averaged RDF g(r) for r in [0, L/2)
       - dr:      bin width used to build g(r)
       - rho:     number density N/V
-      - 
-    
     Returns:
-      - 
+      - S(k):    structure factor as a function of k
     """
-    nbins = len(g_of_r)
-    # bin centers r_i = (i + 0.5) * dr for i=0..nbins-1
-    r_centers = (np.arange(nbins) + 0.5) * dr
-    
-    # integration
-    S_of_k = 1 + 4* np.pi * rho * np.sum(dr* (g_of_r-1) * r_centers**2 * np.sin(k*r_centers)/(k*r_centers) )
+    #determining the center radii of the bins
+    r_centers = (np.arange(len(g_of_r)) + 0.5) * dr
+    # sinc function with exception for k == 0
+    sinc      = 1.0 if k == 0 else np.sin(k*r_centers)/(k*r_centers)
+    #integration
+    S_of_k    = 1 + 4*np.pi*rho*np.sum((g_of_r-1)*r_centers**2*sinc*dr)
     return S_of_k
-
 
 ######### added by Jonas ###########
 def calcg(Ngr, hist, dr, rho, N):
