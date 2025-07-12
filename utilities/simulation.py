@@ -65,8 +65,8 @@ def Simulation2(outdir, write, Traj_name, everyN, random_seed, settings): # forc
     print(f'vx, vy, vz = {vx[0], vy[0], vz[0]}')
 
     if write:
-        fileoutput_eq = open(outdir / (Traj_name + str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
-        fileoutput_eq_unwrapped = open(outdir / (Traj_name+ 'unwrapped'+ str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
+        fileoutput_eq = open(outdir / (Traj_name + "_eq" + '_everyN' + str(everyN) + '_nsteps' + str(settings.nsteps)), "w")
+        fileoutput_eq_unwrapped = open(outdir / (Traj_name+ '_unwrapped'+ '_everyN' + str(everyN) + '_nsteps' + str(settings.nsteps)), "w")
         output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings) 
         output.WriteunwrappedState(fileoutput_eq_unwrapped,0,x,y,z,vx,vy,vz)
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
@@ -99,8 +99,8 @@ def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings): # forc
 
     # open equilibration files
     if write:
-        fileoutput_eq = open(outdir / (Traj_name + "_eq_" + str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
-        fileoutput_eq_unwrapped = open(outdir / (Traj_name+ 'unwrapped'+ str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
+        fileoutput_eq = open(outdir / (Traj_name + "_eq_" + str(everyN) + '_nsteps' + str(settings.nsteps)), "w")
+        fileoutput_eq_unwrapped = open(outdir / (Traj_name+ '_unwrapped'+ str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
         output.WriteTrajectory3d(fileoutput_eq, 0,x,y,z, settings) 
         output.WriteunwrappedState(fileoutput_eq_unwrapped,0,x,y,z,vx,vy,vz)
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
@@ -123,8 +123,8 @@ def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings): # forc
 
     # open PRODUCTION files
     if write:
-        fileoutput_prod = open(outdir / (Traj_name + str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
-        fileoutput_prod_unwrapped = open(outdir / (Traj_name+ 'unwrapped'+ str(everyN) + '_nsteps_' + str(settings.nsteps)), "w")
+        fileoutput_prod = open(outdir / (Traj_name + '_everyN' + str(everyN) + '_nsteps' + str(settings.nsteps)), "w")
+        fileoutput_prod_unwrapped = open(outdir / (Traj_name+ '_unwrapped'+ '_everyN' + str(everyN) + '_nsteps' + str(settings.nsteps)), "w")
         output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z, settings) 
         output.WriteunwrappedState(fileoutput_prod_unwrapped,0,x,y,z,vx,vy,vz)
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
