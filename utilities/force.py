@@ -39,6 +39,7 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
                 fy[j] += SUM* rijy
                 fz[j] += SUM* rijz
             
+            
             else:
                 '''calculate lj interacion'''
                 # Jonas: jo passt mMn
