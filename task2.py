@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from utilities.simulation import Simulation2
-from utilities.msd import compute_msd, plot_msd
+from utilities.msd import compute_msd #, plot_msd
 from utilities import utils
 import settings.settings_task2 as settings
 from scipy.optimize import curve_fit
@@ -75,7 +75,7 @@ def main():
     times, pos, vel, ke = load_unwrapped_state(traj_file, settings.m, settings.N)
 
     dt_snap  = nsave * settings.delta_t
-    lags, msd = compute_msd(pos, max_lag=len(times)//2)
+    lags, msd = compute_msd(pos)#, max_lag=len(times)//2)
 
     #plot everything
     tlags = lags * dt_snap
@@ -84,6 +84,7 @@ def main():
     plt.xlabel(r'$t\,[\tau_{LD}]$')
     plt.ylabel(r'$\langle E_{kin}\rangle$ / particle')
     plt.plot(times * settings.delta_t, ke, color = 'black', label=r'K(t)')
+    plt.axhline(1.5, label= r'3/2 $k_BT$')
     plt.legend()
     if SAVE_FIG:
         plt.savefig(outdir / 'energy.png')
@@ -111,6 +112,26 @@ def main():
 
     plt.xscale('log')
     plt.yscale('log')
+    if SAVE_FIG:
+        plt.savefig(outdir / 'msdlog.png', dpi=300)
+        logging.info('Figure saved → %s', outdir / 'msdlog.png')
+
+        plt.figure(dpi=600)
+    plt.title('Mean-square-distance')
+    plt.xlabel(r'Lag-time $[\tau_{LD}]$')
+    plt.ylabel(r'$\langle r^{2}(t)\rangle$')
+    plt.plot(tlags,msd,color= 'black', label= 'Mean-Square-Distance')
+    # fit balistic, and diffusive regime
+    popt, _ = curve_fit(lin, lags[int(0.7 * len(lags)):] * dt_snap, msd[int(0.7 * len(lags)):])
+    m, c = popt[0], popt[1]
+    D = m / 6
+
+    plt.plot(tlags, lin(tlags, m, c), '--', color = 'red', label=f'Diffusive Regime; D = {round(D,3)}')
+
+
+
+    plt.legend()
+
     if SAVE_FIG:
         plt.savefig(outdir / 'msd.png', dpi=300)
         logging.info('Figure saved → %s', outdir / 'msd.png')
