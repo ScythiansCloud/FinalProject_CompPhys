@@ -86,7 +86,7 @@ def Simulation2(outdir, write, Traj_name, everyN, random_seed, settings): # forc
 
 
 
-def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi): # forces turned off
+def Simulation3(outdir, write, Traj_name, everyN, settings, Csi): # forces turned off
     settings.init(Csi)
     # random seed for reproducibility
     np.random.seed(settings.random_seed)

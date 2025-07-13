@@ -34,9 +34,10 @@ from tqdm import tqdm
 
 # Project-specific imports ----------------------------------------------------
 from utilities import output, initialize, update  # low-level MD helpers
-from utilities.simulation import Simulation3 as _Simulation3_orig
+from utilities.simulation import Simulation3
 from utilities.update import compute_S_of_k_from_gr  # scalar routine
 import settings.settings_task3 as settings3
+import settings.settings_task3 as settings3_Cs10
 from utilities.utils import create_output_directory, setup_logging
 
 # ---------------------------------------------------------------------------
@@ -173,7 +174,7 @@ def _Simulation3_patched(outdir, write, Traj_name, everyN, random_seed, settings
 
 
 # monkey-patch into namespace used further down
-Simulation3 = _Simulation3_patched  # noqa: N816
+# Simulation3 = _Simulation3_patched  # noqa: N816
 
 # ---------------------------------------------------------------------------
 # 1.b  Vectorised S(k) helper -----------------------------------------------
@@ -190,9 +191,10 @@ def compute_S_of_k_from_gr_vec(g_of_r: np.ndarray, dr: float, rho: float, k_arr:
 # 2. SETTINGS (edit if needed) ----------------------------------------------
 # ---------------------------------------------------------------------------
 
-CS_LIST: Sequence[float] = [10, 100, 333, 666, 1000]
+# Cs=10 will be computed seperately
+CS_LIST: Sequence[float] = [100, 333, 666, 1000] 
+# CS_LIST: Sequence[float] = [100, 333] 
 EVERY_N: int = 10
-SEED: int | None = None
 
 # ---------------------------------------------------------------------------
 # 3. Task 3 – run simulations, save g(r) ------------------------------------
@@ -203,43 +205,98 @@ def run_task3(out_dir: Path):
     g_all: list[np.ndarray] = []
 
     for Cs in CS_LIST:
-        logging.info("Cs %.3g – simulation", Cs)
+        logging.info("Cs %.4g – simulation", Cs)
         settings3.init(Cs)
-        g = Simulation3(
-            out_dir,
-            True,
-            f"Task3_Cs{Cs}",
-            EVERY_N,
-            SEED,
-            settings3,
-        )
+        g = Simulation3(out_dir, True, f"Task3_Cs{Cs}", EVERY_N, settings3, Cs)
         g_all.append(g)
-        logging.info("Cs %.3g – plotting", Cs)
+        
+        # logging.info("Cs %.4g – plotting", Cs)
         r_centres = (np.arange(len(g)) + 0.5) * settings3.dr
+        
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(r_centres, g)
-        ax.set(xlabel=r"r / σ", ylabel="g(r)", ylim=(0, 6), title=f"g(r) – Cs={Cs}")
+        ax.set(xlabel=r"$r / \sigma$", ylabel="g(r)", title=f"g(r) – Cs={Cs}")
         fig.tight_layout()
         png = out_dir / f"Task3_g(r)_Cs{Cs}.png"
         fig.savefig(png, dpi=300)
         plt.close(fig)
-        logging.info("Saved %s", png.name)
+        # logging.info("Saved %s", png.name)
+    
+
+    # stacking lsit of 1D‐arrays into one 2D array
+    g_matrix = np.vstack(g_all)         # shape = (len(CS_LIST),   n_bins)
+
+    # writing: each row is one g(r)
+    out_file = out_dir / "Task3_g_all.txt"
+    np.savetxt(out_file, g_matrix)
+    logging.info("Saved all g(r) to %s", out_file.name)
+
 
     # combined plot ---------------------------------------------------------
-    r0 = (np.arange(len(g_all[0])) + 0.5) * settings3.dr
-    fig, ax = plt.subplots(figsize=(8, 5))
-    for Cs, g in zip(CS_LIST, g_all):
-        ax.plot(r0, g, label=f"Cs={Cs}")
-    ax.set(xlabel=r"r / σ", ylabel="g(r)", ylim=(0, 6))
-    ax.legend()
+    save_combined_gr_plot(out_dir, g_all, CS_LIST)
+
+    logging.info("=== Task 3 Cs=[100, ..., 1000] finished ===")
+    return g_all
+
+
+
+def run_task3_Cs10(out_dir: Path,
+                   g_all: list[np.ndarray],
+                   cs_list: list[float]):
+    logging.info("=== Task 3 Cs=10 started ===")
+
+    Cs=10
+    g_r_file = out_dir / "Task3_g_all.txt"
+    # 1) load other g(r) functions from out_dir
+    g_matrix = np.loadtxt(g_r_file)
+
+    settings3_Cs10.init(Cs)
+    g_Cs10 = Simulation3(out_dir, True, f"Task3_Cs{Cs}", EVERY_N, settings3_Cs10, Cs)
+
+    # put new Cs=10 g(r) as first matrix entry
+    g_newmat = np.vstack([g_Cs10, g_matrix])
+
+    # overwrite the old file
+    np.savetxt(g_r_file, g_newmat)
+    
+    logging.info("Cs %.4g – plotting", Cs)
+    r_centres = (np.arange(len(g_Cs10)) + 0.5) * settings3_Cs10.dr
+    
+    # save Cs=10 as well
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(r_centres, g_Cs10)
+    ax.set(xlabel=r"$r / \sigma$", ylabel="g(r)", title=f"g(r) – Cs={Cs}")
     fig.tight_layout()
-    png = out_dir / "Task3_g(r)_all.png"
+    png = out_dir / f"Task3_g(r)_Cs{Cs}.png"
     fig.savefig(png, dpi=300)
     plt.close(fig)
     logging.info("Saved %s", png.name)
 
-    logging.info("=== Task 3 finished ===")
-    return g_all
+    # now overwrite the combined plot with the new list:
+    # prepend the new data
+    new_g_all  = [g_Cs10] + g_all
+    new_cs_list = [10] + CS_LIST
+    
+    save_combined_gr_plot(out_dir, new_g_all, new_cs_list)
+    
+    logging.info("=== Task 3 Cs=10 finished ===")
+
+
+def save_combined_gr_plot(out_dir: Path, g_all: list[np.ndarray], cs_list: list[float]):
+
+    r0 = (np.arange(len(g_all[0])) + 0.5) * settings3.dr
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for Cs, g in zip(cs_list, g_all):
+        ax.plot(r0, g, label=f"Cs={Cs}")
+    ax.set(xlabel=r"r / σ", ylabel="g(r)")
+    ax.legend()
+    fig.tight_layout()
+
+    png = out_dir / "Task3_g(r)_all.png"
+    fig.savefig(png, dpi=300)
+    plt.close(fig)
+    logging.info("Saved combined plot %s", png.name)
 
 # ---------------------------------------------------------------------------
 # 4. Task 4 b – compute S(k) & κ_T -----------------------------------------
@@ -284,11 +341,21 @@ def main():
     setup_logging(out_dir)
     logging.info("Output directory: %s", out_dir)
 
+    # asking to do Cs=10 as well or not
+    answer = input("Also run the Cs=10 simulation afterward? [y/N]: ").strip().lower()
+    do_cs10 = (answer == "y")
+
+    # run the normal batch (Cs=100,333,…)
     g_list = run_task3(out_dir)
-    run_task4(out_dir, g_list)
 
-    logging.info("All tasks completed successfully → %s", out_dir)
+    # only if requested, run Cs=10 at the end
+    if do_cs10:
+        g_list = run_task3_Cs10(out_dir, g_list, CS_LIST)
 
+    # finally, continue on to task 4 (or whatever comes next)
+    # run_task4(out_dir, g_list)
+
+    logging.info("All done → %s", out_dir)
 
 if __name__ == "__main__":
     main()

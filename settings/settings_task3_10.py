@@ -13,10 +13,10 @@ def init(Csi):
     N = 343
 
     global nsteps_eq
-    nsteps_eq = 500000       # nsetps_eq != 100 000 for equilibration run
+    nsteps_eq = 500_0       # nsetps_eq != 100 000 for equilibration run
 
     global nsteps   
-    nsteps = 500000           # nsteps != 100 000 for production run
+    nsteps = 500_0           # nsteps != 100 000 for production run
 
     global nsave
     nsave = 50
@@ -67,7 +67,7 @@ def init(Csi):
     A = 0.1*kBT
 
     global Zprime
-    Zprime = Z*np.exp(kappa_D*sig)/(1+kappa_D*sig/2)
+    Zprime = Z*np.exp(kappa_D*sig/2)/(1+kappa_D*sig/2)
     global Zprimesqrd
     Zprimesqrd = Zprime*Zprime
 

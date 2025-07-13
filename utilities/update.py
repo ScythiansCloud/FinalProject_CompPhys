@@ -59,7 +59,7 @@ def compute_S_of_k_from_gr(g_of_r: np.ndarray,dr: float, rho: float, k: np.ndarr
     S_of_k    = 1 + 4*np.pi*rho*np.sum((g_of_r-1)*r_centers**2*sinc*dr)
     return S_of_k
 
-######### added by Jonas ###########
+
 def calcg(Ngr, hist, dr, rho, N):
     r= r = np.arange(len(hist)) * dr    # hist goes up to l/2
     nid = 4*np.pi *rho /3 * ((r+ dr)**3-r**3) # type: ignore
