@@ -250,7 +250,7 @@ def run_task4(out_dir: Path, g_list: list[np.ndarray]):
     dr = settings3.dr
     L = settings3.L
     rho = getattr(settings3, "rho", None) or settings3.N / L**3
-    kBT = getattr(settings3, "kBT", None) or (settings3.kB * settings3.T)
+    kBT = getattr(settings3, "kBT", None) or (settings3.kBT)
 
     k_min = 2 * np.pi / (L / 2)
     k_arr = np.concatenate(([0.0], np.linspace(k_min, 20 * k_min, 400)))

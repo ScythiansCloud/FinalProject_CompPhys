@@ -86,8 +86,8 @@ def Simulation2(outdir, write, Traj_name, everyN, random_seed, settings): # forc
 
 
 
-def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings): # forces turned off
-    import settings.settings_task3 as settings
+def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi): # forces turned off
+    settings.init(Csi)
     # random seed for reproducibility
     np.random.seed(settings.random_seed)
     x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings.Cs, settings.random_seed, settings)

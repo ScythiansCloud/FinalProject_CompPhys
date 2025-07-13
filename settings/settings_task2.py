@@ -13,7 +13,7 @@ def init(Csi):
     N = 256
 
     global nsteps
-    nsteps = 100000
+    nsteps = 200000
 
     global nsave
     nsave = 10
@@ -23,7 +23,7 @@ def init(Csi):
     kBT = 1
 
     global random_seed
-    random_seed = 42069
+    random_seed = 42069161
     ########################################################
 
     global xi #fricition parameter
@@ -65,7 +65,7 @@ def init(Csi):
     A = 0.1*kBT
 
     global Zprime
-    Zprime = Z*np.exp(kappa_D*sig/2)/(1+kappa_D*sig/2)
+    Zprime = Z*np.exp(kappa_D*sig)/(1+kappa_D*sig/2)
     global Zprimesqrd
     Zprimesqrd = Zprime*Zprime
 
