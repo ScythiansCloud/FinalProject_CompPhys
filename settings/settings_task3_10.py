@@ -16,10 +16,10 @@ def init(Csi):
     nsteps_eq = 500000       # nsetps_eq != 100 000 for equilibration run
 
     global nsteps   
-    nsteps = 250000           # nsteps != 100 000 for production run
+    nsteps = 500000           # nsteps != 100 000 for production run
 
     global nsave
-    nsave = 25
+    nsave = 50
 
     global kBT
     kBT = 1
@@ -75,7 +75,7 @@ def init(Csi):
     tau = sig*sig/(kBT)*xi
 
     global delta_t
-    delta_t= 4e-3*tau
+    delta_t= 2e-3*tau
 
     global dr             # bin width for RDF with respect to the box size
     dr = L/2 / 500        # 500 bins for the RDF
