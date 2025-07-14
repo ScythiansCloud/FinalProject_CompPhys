@@ -24,8 +24,6 @@ def plotpot():
 
     colors = ['red', 'green', 'purple', 'gold','blue']
 
-    # colors = ['royalblue', 'darkorange',  'seagreen',  'crimson', 'mediumpurple', 'black'] 
-
     for Cs, vi in zip(Csi, vs):
         
         settings.init(Cs)
