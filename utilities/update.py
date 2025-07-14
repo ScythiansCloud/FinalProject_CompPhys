@@ -42,7 +42,26 @@ def update(TASK2, x,y,z,vx,vy,vz, L, N, sig, delta, A, m, Zprimesqrd,
     return x,y,z,vx,vy,vz
 
 
-def compute_S_of_k_from_gr(g_of_r: np.ndarray,dr: float, rho: float, k: np.ndarray,) -> np.ndarray:
+# def compute_S_of_k_from_gr(g_of_r: np.ndarray,dr: float, rho: float, k: np.ndarray,) -> np.ndarray:
+#     """
+#     Given:
+#       - g_of_r:  1D array of length nbins, the time‐averaged RDF g(r) for r in [0, L/2)
+#       - dr:      bin width used to build g(r)
+#       - rho:     number density N/V
+#     Returns:
+#       - S(k):    structure factor as a function of k
+#     """
+#     #determining the center radii of the bins
+#     r_centers = (np.arange(len(g_of_r)) + 0.5) * dr
+#     # sinc function with exception for k == 0
+#     sinc      = 1.0 if k == 0 else np.sin(k*r_centers)/(k*r_centers)
+#     #integration
+#     S_of_k    = 1 + 4*np.pi*rho*np.sum((g_of_r-1)*r_centers**2*sinc*dr)
+#     return S_of_k
+
+import numpy as np
+
+def compute_S_of_k_from_gr(g_of_r: np.ndarray, dr: float, rho: float, k_arr: np.ndarray) -> np.ndarray:
     """
     Given:
       - g_of_r:  1D array of length nbins, the time‐averaged RDF g(r) for r in [0, L/2)
@@ -51,14 +70,21 @@ def compute_S_of_k_from_gr(g_of_r: np.ndarray,dr: float, rho: float, k: np.ndarr
     Returns:
       - S(k):    structure factor as a function of k
     """
-    #determining the center radii of the bins
-    r_centers = (np.arange(len(g_of_r)) + 0.5) * dr
-    # sinc function with exception for k == 0
-    sinc      = 1.0 if k == 0 else np.sin(k*r_centers)/(k*r_centers)
-    #integration
-    S_of_k    = 1 + 4*np.pi*rho*np.sum((g_of_r-1)*r_centers**2*sinc*dr)
-    return S_of_k
+    # determining the center radii of the bins
+    r_centres = (np.arange(len(g_of_r)) + 0.5) * dr
 
+    # k and r to build the sinc matrix
+    k_arr = np.asarray(k_arr, dtype=float)
+    kr = np.outer(k_arr, r_centres)          # shape (n_k, n_r) for same size
+    # sinc function with exception for k == 0
+    sinc = np.where(kr == 0.0, 1.0, np.sin(kr) / kr)
+
+    # Integrand common to all k
+    integrand = (g_of_r - 1.0) * r_centres**2
+
+    # integration for every k
+    S_k = 1.0 + 4.0 * np.pi * rho * (sinc @ integrand) * dr
+    return S_k
 
 def calcg(Ngr, hist, dr, rho, N):
     r= r = np.arange(len(hist)) * dr    # hist goes up to l/2

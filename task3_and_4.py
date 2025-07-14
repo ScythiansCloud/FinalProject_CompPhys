@@ -1,39 +1,15 @@
-# tasks3_and_4.py (debug fix 2 – 2025-07-12)
-# ---------------------------------------------------------------------------
-# Unified Task 3 + Task 4 b runner – fixed context-manager bug
-# ---------------------------------------------------------------------------
-
-"""Run Simulation3 for several salt concentrations → save g(r), S(k), κ_T.
-
-This revision fixes *TypeError: 'tuple' object does not support the context
-manager protocol* that appeared on Windows ≥ Py3.11 – we can’t put several
-context managers inside parentheses.  Switched to **contextlib.nullcontext** so
-we can still use a single `with` statement whether *write* is True or False.
-Other small clean-ups:
-• added missing imports (*initialize*, *update*, *contextlib.nullcontext*).
-• clarified random-seed logic.
-"""
-
 from __future__ import annotations
 
 # ---------------------------------------------------------------------------
 # 1. Imports and helper functions
 # ---------------------------------------------------------------------------
-
 import logging
 from pathlib import Path
 from typing import Sequence
-from contextlib import nullcontext
-
-import matplotlib
-
-matplotlib.use("Agg")  # head-less backend – no GUI blocking
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm
 
 # Project-specific imports ----------------------------------------------------
-from utilities import output, initialize, update  # low-level MD helpers
 from utilities.simulation import Simulation3
 from utilities.update import compute_S_of_k_from_gr  # scalar routine
 import settings.settings_task3 as settings3
@@ -41,154 +17,7 @@ import settings.settings_task3_10 as settings3_Cs10
 from utilities.utils import create_output_directory, setup_logging
 
 # ---------------------------------------------------------------------------
-# 1.a  Monky-patch Simulation3 (safer & faster) ------------------------------
-# ---------------------------------------------------------------------------
-
-def _Simulation3_patched(outdir, write, Traj_name, everyN, random_seed, settings):
-    # --- random seed -------------------------------------------------------
-    seed = settings.random_seed if random_seed is None else random_seed
-    np.random.seed(seed)
-
-    # --- initial configuration -------------------------------------------
-    x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings.Cs, seed, settings)
-
-    # one initial update so velocities are thermalised
-    x, y, z, vx, vy, vz = update.update(
-        False,
-        x,
-        y,
-        z,
-        vx,
-        vy,
-        vz,
-        settings.L,
-        settings.N,
-        settings.sig,
-        settings.delta,
-        settings.A,
-        settings.m,
-        settings.Zprimesqrd,
-        settings.lambda_B,
-        settings.kappa_D,
-        settings.kBT,
-        settings.xi,
-        settings.delta_t,
-        settings.gaus_var,
-        seed,
-    )
-
-    # helper for filenames --------------------------------------------------
-    def _fname(prefix: str):
-        return outdir / f"{Traj_name}_{prefix}_everyN{everyN}_nsteps{settings.nsteps}"
-
-    # choose real file handles or harmless nullcontext() stubs --------------
-    cm_eq  = open(_fname("eq"), "w")             if write else nullcontext()
-    cm_equ = open(_fname("eq_unwrapped"), "w")    if write else nullcontext()
-    cm_pr  = open(_fname("prod"), "w")           if write else nullcontext()
-    cm_pru = open(_fname("prod_unwrapped"), "w")  if write else nullcontext()
-
-    # open all four in one WITH statement (comma-separated list) ------------
-    with cm_eq  as file_eq, \
-         cm_equ as file_eq_unw, \
-         cm_pr  as file_prod, \
-         cm_pru as file_prod_unw:
-
-        if write:
-            output.WriteTrajectory3d(file_eq, 0, x, y, z, settings)
-            output.WriteunwrappedState(file_eq_unw, 0, x, y, z, vx, vy, vz)
-
-        # ---------------- Equilibration loop -----------------------------
-        logging.info("Equilibration: %d steps", settings.nsteps_eq)
-        for i in tqdm(range(settings.nsteps_eq), desc="Eq", leave=False):
-            x, y, z, vx, vy, vz = update.update(
-                False,
-                x,
-                y,
-                z,
-                vx,
-                vy,
-                vz,
-                settings.L,
-                settings.N,
-                settings.sig,
-                settings.delta,
-                settings.A,
-                settings.m,
-                settings.Zprimesqrd,
-                settings.lambda_B,
-                settings.kappa_D,
-                settings.kBT,
-                settings.xi,
-                settings.delta_t,
-                settings.gaus_var,
-                seed,
-            )
-            if write and i % everyN == 0:
-                output.WriteTrajectory3d(file_eq, i, x, y, z, settings)
-                output.WriteunwrappedState(file_eq_unw, i, x, y, z, vx, vy, vz)
-
-        # ---------------- Production loop ---------------------------------
-        logging.info("Production: %d steps", settings.nsteps)
-        nbins = int(settings.L / 2 / settings.dr)
-        hist = np.zeros(nbins)
-        Ngr = 0
-
-        for i in tqdm(range(settings.nsteps), desc="Prod", leave=False):
-            x, y, z, vx, vy, vz = update.update(
-                False,
-                x,
-                y,
-                z,
-                vx,
-                vy,
-                vz,
-                settings.L,
-                settings.N,
-                settings.sig,
-                settings.delta,
-                settings.A,
-                settings.m,
-                settings.Zprimesqrd,
-                settings.lambda_B,
-                settings.kappa_D,
-                settings.kBT,
-                settings.xi,
-                settings.delta_t,
-                settings.gaus_var,
-                seed,
-            )
-            if i % everyN == 0:
-                if write:
-                    output.WriteTrajectory3d(file_prod, i, x, y, z, settings)
-                    output.WriteunwrappedState(file_prod_unw, i, x, y, z, vx, vy, vz)
-
-                hist = update.update_hist(hist, x, y, z, settings.dr, settings.N, settings.L)
-                Ngr += 1
-                g = update.calcg(Ngr, hist, settings.dr, settings.rho, settings.N)
-
-        # final g(r) if loop ended without update
-        if "g" not in locals():
-            g = update.calcg(max(Ngr, 1), hist, settings.dr, settings.rho, settings.N)
-
-    return g
-
-
-# monkey-patch into namespace used further down
-# Simulation3 = _Simulation3_patched  # noqa: N816
-
-# ---------------------------------------------------------------------------
-# 1.b  Vectorised S(k) helper -----------------------------------------------
-
-
-def compute_S_of_k_from_gr_vec(g_of_r: np.ndarray, dr: float, rho: float, k_arr: np.ndarray):
-    return np.fromiter(
-        (compute_S_of_k_from_gr(g_of_r, dr, rho, k) for k in k_arr),
-        dtype=float,
-        count=len(k_arr),
-    )
-
-# ---------------------------------------------------------------------------
-# 2. SETTINGS (edit if needed) ----------------------------------------------
+# 1. SETTINGS  ----------------------------------------------
 # ---------------------------------------------------------------------------
 
 # Cs=10 will be computed seperately
@@ -198,7 +27,7 @@ CS_LIST_COMPLETE: Sequence[float] = [10, 100, 333, 666, 1000]
 EVERY_N: int = 10
 
 # ---------------------------------------------------------------------------
-# 3. Task 3 – run simulations, save g(r) ------------------------------------
+# 2. Task 3 – run simulations, save g(r) ------------------------------------
 # ---------------------------------------------------------------------------
 
 def run_task3(out_dir: Path):
@@ -211,7 +40,7 @@ def run_task3(out_dir: Path):
     for Cs in CS_LIST:
         logging.info("Cs %.4g – simulation", Cs)
         settings3.init(Cs)
-        g = Simulation3(out_dir, True, f"Task3_Cs{Cs}", EVERY_N, settings3, Cs)
+        g = Simulation3(out_dir, True, f"Task3_Cs{Cs}", EVERY_N, None, settings3, Cs)
         g_all.append(g)
         
         # logging.info("Cs %.4g – plotting", Cs)
@@ -243,7 +72,9 @@ def run_task3(out_dir: Path):
     logging.info("=== Task 3 Cs=[100, ..., 1000] finished ===")
     return g_all
 
-
+# ---------------------------------------------------------------------------
+# 3. Task 3 Cs=10 – run simulation, save g(r) --------------------------------
+# ---------------------------------------------------------------------------
 
 def run_task3_Cs10(out_dir: Path,
                    g_all: list[np.ndarray],
@@ -259,7 +90,7 @@ def run_task3_Cs10(out_dir: Path,
     g_matrix = np.loadtxt(g_r_file)
 
     settings3_Cs10.init(Cs)
-    g_Cs10 = Simulation3(out_dir, True, f"Task3_Cs{Cs}", EVERY_N, settings3_Cs10, Cs)
+    g_Cs10 = Simulation3(out_dir, True, f"Task3_Cs{Cs}", EVERY_N, None, settings3_Cs10, Cs)
 
     # put new Cs=10 g(r) as first matrix entry
     g_newmat = np.vstack([g_Cs10, g_matrix])
@@ -290,6 +121,9 @@ def run_task3_Cs10(out_dir: Path,
     logging.info("=== Task 3 Cs=10 finished ===")
     return new_g_all
 
+# ---------------------------------------------------------------------------
+# 4. Task 3 g(r) combined plot – save to file --------------------------------  
+# ---------------------------------------------------------------------------
 
 def save_combined_gr_plot(out_dir: Path, g_all: list[np.ndarray], cs_list: list[float]):
 
@@ -308,7 +142,7 @@ def save_combined_gr_plot(out_dir: Path, g_all: list[np.ndarray], cs_list: list[
     logging.info("Saved combined plot %s", png.name)
 
 # ---------------------------------------------------------------------------
-# 4. Task 4 b – compute S(k) & κ_T -----------------------------------------
+# 5. Task 4 b – compute S(k) & κ_T -----------------------------------------
 # ---------------------------------------------------------------------------
 
 def run_task4(out_dir: Path, g_list: list[np.ndarray], cs_list: list):
@@ -327,7 +161,7 @@ def run_task4(out_dir: Path, g_list: list[np.ndarray], cs_list: list):
 
     for Cs, g in zip(cs_list, g_list):
         logging.info("Cs %.4g – computing S(k)", Cs)
-        S_k = compute_S_of_k_from_gr_vec(g, dr, rho, k_arr)
+        S_k = compute_S_of_k_from_gr(g, dr, rho, k_arr)
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(k_arr[1:], S_k[1:])
         ax.set(xlabel="k", ylabel="S(k)", title=f"Structure factor – Cs={Cs}")
@@ -345,7 +179,7 @@ def run_task4(out_dir: Path, g_list: list[np.ndarray], cs_list: list):
     logging.info("=== Task 4 b finished ===")
 
 # ---------------------------------------------------------------------------
-# 5. main() – everything together -------------------------------------------
+# 6. main() – everything together -------------------------------------------
 # ---------------------------------------------------------------------------
 
 def main():
