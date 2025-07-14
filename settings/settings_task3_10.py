@@ -13,10 +13,10 @@ def init(Csi):
     N = 343
 
     global nsteps_eq
-    nsteps_eq = 500_0       # nsetps_eq != 100 000 for equilibration run
+    nsteps_eq = 500_000       # nsetps_eq != 500 000 to run the same time when using delta_t=2/1000
 
     global nsteps   
-    nsteps = 500_0           # nsteps != 100 000 for production run
+    nsteps = 500_000          # nsteps != 500 000 to run the same time when using delta_t=2/1000 
 
     global nsave
     nsave = 50
@@ -25,7 +25,7 @@ def init(Csi):
     kBT = 1
 
     global random_seed
-    random_seed = 42069
+    random_seed = 1213      # != 42069
     ########################################################
 
     global xi #fricition parameter
@@ -74,8 +74,10 @@ def init(Csi):
     global tau
     tau = sig*sig/(kBT)*xi
 
-    global delta_t
-    delta_t= 2e-3*tau
+    global delta_t          # using 2/1000*tau * 500 000 --> corresponds to 100 ...seconds
+    delta_t= 2e-3*tau       # changed delta_t = 2/1000*tau which will correspond to the same 
+                            # total simulation time as for other concentrations  
+
 
     global dr             # bin width for RDF with respect to the box size
     dr = L/2 / 500        # 500 bins for the RDF

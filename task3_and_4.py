@@ -37,7 +37,7 @@ from utilities import output, initialize, update  # low-level MD helpers
 from utilities.simulation import Simulation3
 from utilities.update import compute_S_of_k_from_gr  # scalar routine
 import settings.settings_task3 as settings3
-import settings.settings_task3 as settings3_Cs10
+import settings.settings_task3_10 as settings3_Cs10
 from utilities.utils import create_output_directory, setup_logging
 
 # ---------------------------------------------------------------------------
@@ -193,6 +193,7 @@ def compute_S_of_k_from_gr_vec(g_of_r: np.ndarray, dr: float, rho: float, k_arr:
 
 # Cs=10 will be computed seperately
 CS_LIST: Sequence[float] = [100, 333, 666, 1000] 
+CS_LIST_COMPLETE: Sequence[float] = [10, 100, 333, 666, 1000]
 # CS_LIST: Sequence[float] = [100, 333] 
 EVERY_N: int = 10
 
@@ -203,6 +204,9 @@ EVERY_N: int = 10
 def run_task3(out_dir: Path):
     logging.info("=== Task 3 started ===")
     g_all: list[np.ndarray] = []
+
+    g_of_rs_dir = out_dir / "g_of_rs"       # folder for g(r) stuff
+    g_of_rs_dir.mkdir(parents=True, exist_ok=True)
 
     for Cs in CS_LIST:
         logging.info("Cs %.4g – simulation", Cs)
@@ -217,7 +221,7 @@ def run_task3(out_dir: Path):
         ax.plot(r_centres, g)
         ax.set(xlabel=r"$r / \sigma$", ylabel="g(r)", title=f"g(r) – Cs={Cs}")
         fig.tight_layout()
-        png = out_dir / f"Task3_g(r)_Cs{Cs}.png"
+        png = g_of_rs_dir / f"Task3_g(r)_Cs{Cs}.png"
         fig.savefig(png, dpi=300)
         plt.close(fig)
         # logging.info("Saved %s", png.name)
@@ -226,8 +230,9 @@ def run_task3(out_dir: Path):
     # stacking lsit of 1D‐arrays into one 2D array
     g_matrix = np.vstack(g_all)         # shape = (len(CS_LIST),   n_bins)
 
+
     # writing: each row is one g(r)
-    out_file = out_dir / "Task3_g_all.txt"
+    out_file = g_of_rs_dir / "Task3_g_all.txt"      
     np.savetxt(out_file, g_matrix)
     logging.info("Saved all g(r) to %s", out_file.name)
 
@@ -246,7 +251,10 @@ def run_task3_Cs10(out_dir: Path,
     logging.info("=== Task 3 Cs=10 started ===")
 
     Cs=10
-    g_r_file = out_dir / "Task3_g_all.txt"
+
+    g_of_rs_dir = out_dir / "g_of_rs"
+    g_of_rs_dir.mkdir(parents=True, exist_ok=True)
+    g_r_file = g_of_rs_dir / "Task3_g_all.txt"
     # 1) load other g(r) functions from out_dir
     g_matrix = np.loadtxt(g_r_file)
 
@@ -267,7 +275,7 @@ def run_task3_Cs10(out_dir: Path,
     ax.plot(r_centres, g_Cs10)
     ax.set(xlabel=r"$r / \sigma$", ylabel="g(r)", title=f"g(r) – Cs={Cs}")
     fig.tight_layout()
-    png = out_dir / f"Task3_g(r)_Cs{Cs}.png"
+    png = g_of_rs_dir / f"Task3_g(r)_Cs{Cs}.png"
     fig.savefig(png, dpi=300)
     plt.close(fig)
     logging.info("Saved %s", png.name)
@@ -277,9 +285,10 @@ def run_task3_Cs10(out_dir: Path,
     new_g_all  = [g_Cs10] + g_all
     new_cs_list = [10] + CS_LIST
     
-    save_combined_gr_plot(out_dir, new_g_all, new_cs_list)
+    save_combined_gr_plot(g_of_rs_dir, new_g_all, new_cs_list)
     
     logging.info("=== Task 3 Cs=10 finished ===")
+    return new_g_all
 
 
 def save_combined_gr_plot(out_dir: Path, g_all: list[np.ndarray], cs_list: list[float]):
@@ -302,7 +311,7 @@ def save_combined_gr_plot(out_dir: Path, g_all: list[np.ndarray], cs_list: list[
 # 4. Task 4 b – compute S(k) & κ_T -----------------------------------------
 # ---------------------------------------------------------------------------
 
-def run_task4(out_dir: Path, g_list: list[np.ndarray]):
+def run_task4(out_dir: Path, g_list: list[np.ndarray], cs_list: list):
     logging.info("=== Task 4 b started ===")
     dr = settings3.dr
     L = settings3.L
@@ -313,14 +322,17 @@ def run_task4(out_dir: Path, g_list: list[np.ndarray]):
     k_arr = np.concatenate(([0.0], np.linspace(k_min, 20 * k_min, 400)))
     kappa = []
 
-    for Cs, g in zip(CS_LIST, g_list):
-        logging.info("Cs %.3g – computing S(k)", Cs)
+    sf_dir = out_dir / "structure_factors"          # folder for S(k) stuff
+    sf_dir.mkdir(parents=True, exist_ok=True)
+
+    for Cs, g in zip(cs_list, g_list):
+        logging.info("Cs %.4g – computing S(k)", Cs)
         S_k = compute_S_of_k_from_gr_vec(g, dr, rho, k_arr)
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(k_arr[1:], S_k[1:])
         ax.set(xlabel="k", ylabel="S(k)", title=f"Structure factor – Cs={Cs}")
         fig.tight_layout()
-        png = out_dir / f"structure_factor_Cs{Cs}.png"
+        png = sf_dir / f"structure_factor_Cs{Cs}.png"
         fig.savefig(png, dpi=300)
         plt.close(fig)
         logging.info("Saved %s", png.name)
@@ -328,12 +340,12 @@ def run_task4(out_dir: Path, g_list: list[np.ndarray]):
             kappa.append((Cs, S_k[0] / (rho * kBT)))
 
     if kappa:
-        logging.info("\nκ_T summary:\n%s", "\n".join(f"Cs={c:8.3g} → κ_T={k:12.5e}" for c, k in kappa))
+        logging.info("\nκ_T summary:\n%s", "\n".join(f"Cs={c:8.3g} --> κ_T={k:12.5e}" for c, k in kappa))
 
     logging.info("=== Task 4 b finished ===")
 
 # ---------------------------------------------------------------------------
-# 5. main() – glue everything together --------------------------------------
+# 5. main() – everything together -------------------------------------------
 # ---------------------------------------------------------------------------
 
 def main():
@@ -353,7 +365,7 @@ def main():
         g_list = run_task3_Cs10(out_dir, g_list, CS_LIST)
 
     # finally, continue on to task 4 (or whatever comes next)
-    # run_task4(out_dir, g_list)
+    run_task4(out_dir, g_list, CS_LIST_COMPLETE)
 
     logging.info("All done → %s", out_dir)
 

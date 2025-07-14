@@ -13,10 +13,10 @@ def init(Csi):
     N = 343
 
     global nsteps_eq
-    nsteps_eq = 100_0       # nsetps_eq != 100 000 for equilibration run
+    nsteps_eq = 100_000       # nsetps_eq != 100 000 for equilibration run
 
     global nsteps   
-    nsteps = 100_0          # nsteps != 100 000 for production run
+    nsteps = 100_000          # nsteps != 100 000 for production run
 
     global nsave
     nsave = 10
@@ -25,7 +25,7 @@ def init(Csi):
     kBT = 1
 
     global random_seed
-    random_seed = 420
+    random_seed = 1213      # != 42069
     ########################################################
 
     global xi #fricition parameter
@@ -74,8 +74,8 @@ def init(Csi):
     global tau
     tau = sig*sig/(kBT)*xi
 
-    global delta_t
-    delta_t= 1e-2*tau
+    global delta_t          # using 1/100*tau * 100 000 --> corresponds to 100 ...seconds
+    delta_t= 1e-2*tau       # will change for Cs10
 
     global dr             # bin width for RDF with respect to the box size
     dr = L/2 / 500        # 500 bins for the RDF
