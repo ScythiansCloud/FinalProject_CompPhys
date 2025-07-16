@@ -1,7 +1,4 @@
 from __future__ import annotations
-"""
-Task3+4: Plot g(r), compute S(k), plot S(k), Plot global g(r) peaks vs Cs, Coordination number curves
-"""
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,12 +22,10 @@ K_MAX_MULT = 20.0            # k_max = K_MAX_MULT * k_min
 # ----------------------------------------------------------------------------
 
 def settings_for_cs(Cs: float):
-    """Return the correct settings module for this Cs."""
     return settings_10 if int(round(Cs)) == 10 else settings_std
 
 
 def load_gr_file(data_dir: Path, Cs: float) -> np.ndarray:
-    """Load one-column g(r) file for the given Cs."""
     path = data_dir / f"g_r_Cs{int(round(Cs))}.txt"
     if not path.is_file():
         raise FileNotFoundError(f"Missing g(r) file: {path}")
@@ -65,7 +60,7 @@ def load_all(data_dir: Path, cs_list):
     return gr, rr, settings_by_cs
 
 # ----------------------------------------------------------------------------
-# plotting helpers
+# plotting: g(r)
 # ----------------------------------------------------------------------------
 
 def plot_gr_individual(gr, rr, out_dir: Path):
@@ -92,11 +87,10 @@ def plot_gr_combined(gr, rr, out_dir: Path):
     plt.close(fig)
 
 # ----------------------------------------------------------------------------
-# S(k) computation (with warning suppression)
+# S(k)
 # ----------------------------------------------------------------------------
 
 def compute_sk(gr, settings_by_cs):
-    """Compute S(k) arrays for all Cs; return dicts Sk, kk."""
     Sk = {}
     kk = {}
     for Cs, g in gr.items():
@@ -134,88 +128,121 @@ def plot_sk_combined(Sk, kk, out_dir: Path, *, atol=1e-10, rtol=1e-7):
     fig, ax = plt.subplots(figsize=(8, 5))
     for Cs in sorted(Sk):
         ax.plot(kk[Cs][1:], Sk[Cs][1:], label=f"Cs={Cs}")
-        # if you want to include k=0 in the plot, remove [1:]
     ax.set(xlabel="k", ylabel="S(k)")
     ax.legend()
     fig.savefig(out_dir / "S_k_all.png", dpi=300)
     plt.close(fig)
 
-# =============================================================================
-# === Functionality 1: global g(r) maxima vs Cs ==============================
-# =============================================================================
+# ----------------------------------------------------------------------------
+# global g(r) maxima vs Cs
+# ----------------------------------------------------------------------------
 
 def compute_gr_global_maxima(gr, rr):
     Cs_vals = []
     r_max_vals = []
     g_max_vals = []
     for Cs, g in gr.items():
-        idx = int(np.argmax(g))
+        i = int(np.argmax(g))
         Cs_vals.append(Cs)
-        r_max_vals.append(rr[Cs][idx])
-        g_max_vals.append(g[idx])
-    order = np.argsort(Cs_vals)
-    Cs_vals = np.asarray(Cs_vals)[order]
-    r_max_vals = np.asarray(r_max_vals)[order]
-    g_max_vals = np.asarray(g_max_vals)[order]
-    return Cs_vals, r_max_vals, g_max_vals
+        r_max_vals.append(rr[Cs][i])
+        g_max_vals.append(g[i])
+    o = np.argsort(Cs_vals)
+    return np.asarray(Cs_vals)[o], np.asarray(r_max_vals)[o], np.asarray(g_max_vals)[o]
 
 
 def plot_gr_global_maxima(Cs_vals, r_max_vals, g_max_vals, out_dir: Path):
-    # r_peak vs Cs
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(5,4))
     ax.plot(Cs_vals, r_max_vals, marker='o')
-    ax.set(xlabel="Cs", ylabel="r_max", title="g(r) peak position vs Cs")
+    ax.set(xlabel="Cs", ylabel="r_max")
     fig.savefig(out_dir / "g_r_peak_r_vs_Cs.png", dpi=300)
     plt.close(fig)
-    # g_peak vs Cs
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(5,4))
     ax.plot(Cs_vals, g_max_vals, marker='o')
-    ax.set(xlabel="Cs", ylabel="g_max", title="g(r) peak height vs Cs")
+    ax.set(xlabel="Cs", ylabel="g_max")
     fig.savefig(out_dir / "g_r_peak_g_vs_Cs.png", dpi=300)
     plt.close(fig)
 
 # =============================================================================
-# === Functionality 2: coordination number curves ============================
+# coordination number for 1st solvation shell (scalar n1 per Cs)
 # =============================================================================
 
-def coordination_number_curve(g, r, rho):
-    dr = np.gradient(r)
-    integrand = g * (r**2) * dr
-    cn = 4.0 * np.pi * rho * np.cumsum(integrand)
-    return cn
+def _first_shell_cutoff_r(r: np.ndarray, g: np.ndarray, *, min_start: int = 1) -> float:
+    g = np.asarray(g)
+    r = np.asarray(r)
+    if len(g) < 3:
+        return float(r[-1])
+    peak_idx = int(np.argmax(g))
+    start = min(len(g) - 2, max(peak_idx + min_start, 1))
+    for i in range(start, len(g) - 1):
+        if g[i] <= g[i - 1] and g[i] <= g[i + 1]:
+            return float(r[i])
+    if start < len(g):
+        j_rel = int(np.argmin(g[start:]))
+        return float(r[start + j_rel])
+    return float(r[-1])
 
 
-def compute_all_coordination_numbers(gr, rr, settings_by_cs):
-    cn = {}
-    for Cs, g in gr.items():
-        smod = settings_by_cs[Cs]
-        rho = getattr(smod, "rho", None) or smod.N / (smod.L ** 3)
-        cn[Cs] = coordination_number_curve(g, rr[Cs], rho)
-    return cn
+def coordination_number_first_shell(g: np.ndarray, r: np.ndarray, rho: float) -> tuple[float, float]:
+    r1 = _first_shell_cutoff_r(r, g)
+    mask = r <= r1
+    integrand = g[mask] * (r[mask]**2)
+    n1 = 4.0 * np.pi * rho * np.trapz(integrand, r[mask])
+    return r1, n1
 
 
-def plot_cn_individual(cn, rr, out_dir: Path):
+def write_coordination_numbers_first_shell(gr: dict, rr: dict, settings_by_cs: dict,
+                                           out_dir: Path,
+                                           fname: str = "coordination_numbers.txt"):
     out_dir.mkdir(parents=True, exist_ok=True)
-    for Cs, cn_arr in cn.items():
-        r = rr[Cs]
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(r, cn_arr)
-        ax.set(xlabel="r / sigma", ylabel="coordination number", title=f"CN(r) – Cs={Cs}")
-        fig.savefig(out_dir / f"CN_Cs{int(Cs)}.png", dpi=300)
-        plt.close(fig)
-
-
-def plot_cn_combined(cn, rr, out_dir: Path):
-    if not cn:
-        return
-    out_dir.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(8, 5))
-    for Cs in sorted(cn):
-        ax.plot(rr[Cs], cn[Cs], label=f"Cs={Cs}")
-    ax.set(xlabel="r / sigma", ylabel="coordination number")
-    ax.legend()
-    fig.savefig(out_dir / "CN_all.png", dpi=300)
+    path = out_dir / fname
+    Cs_vals = []
+    r1_vals = []
+    n1_vals = []
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("# n1 = 4*pi*rho * int_0^{r1} g(r) r^2 dr   (r1 = first min after main peak)\n")
+        fh.write("# Cs   r1   n1\n")
+        for Cs in sorted(gr):
+            smod = settings_by_cs[Cs]
+            rho = getattr(smod, "rho", None) or smod.N / (smod.L ** 3)
+            r1, n1 = coordination_number_first_shell(gr[Cs], rr[Cs], rho)
+            fh.write(f"{Cs:10.4g}  {r1:16.8e}  {n1:16.8e}\n")
+            Cs_vals.append(Cs)
+            r1_vals.append(r1)
+            n1_vals.append(n1)
+    print(f"[Task3+4] coordination numbers written: {path}")
+    # plot n1 vs Cs
+    Cs_arr = np.asarray(Cs_vals, dtype=float)
+    n1_arr = np.asarray(n1_vals, dtype=float)
+    fig, ax = plt.subplots(figsize=(5,4))
+    ax.plot(Cs_arr, n1_arr, marker='o')
+    ax.set(xlabel="Cs", ylabel="coordination number n1")
+    fig.savefig(out_dir / "coordination_number_vs_Cs.png", dpi=300)
     plt.close(fig)
+    return Cs_arr, np.asarray(r1_vals, dtype=float), n1_arr
+
+# =============================================================================
+# isothermal compressibility
+# =============================================================================
+
+def write_compressibilities(Sk: dict, settings_by_cs: dict, kk: dict, out_dir: Path, fname: str = "compressibilities.txt"):
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / fname
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("# isothermal compressibility kappa_T = S(0) / (rho * kB * T)\n")
+        fh.write("# Cs   S0   rho   kBT   kappa_T\n")
+        for Cs in sorted(Sk):
+            smod = settings_by_cs[Cs]
+            rho = getattr(smod, "rho", None) or smod.N / (smod.L ** 3)
+            if hasattr(smod, "kBT"):
+                kBT = float(smod.kBT)
+            elif hasattr(smod, "kB") and hasattr(smod, "T"):
+                kBT = float(smod.kB) * float(smod.T)
+            else:
+                raise AttributeError(f"No kBT (or kB,T) in settings for Cs={Cs}")
+            S0 = float(Sk[Cs][0])
+            kappa = S0 / (rho * kBT)
+            fh.write(f"{Cs:10.4g}  {S0:16.8e}  {rho:16.8e}  {kBT:16.8e}  {kappa:16.8e}\n")
+    print(f"[Task3+4] compressibilities written: {path}")
 
 # ----------------------------------------------------------------------------
 # main
@@ -239,16 +266,17 @@ def main():
     plot_sk_individual(Sk, kk, out_dir)
     plot_sk_combined(Sk, kk, out_dir)
 
-    # === Functionality 1 ===
+    # Global g(r) peak summary
     Cs_vals, r_max_vals, g_max_vals = compute_gr_global_maxima(gr, rr)
     plot_gr_global_maxima(Cs_vals, r_max_vals, g_max_vals, out_dir)
 
-    # === Functionality 2 ===
-    cn = compute_all_coordination_numbers(gr, rr, settings_by_cs)
-    plot_cn_individual(cn, rr, out_dir)
-    plot_cn_combined(cn, rr, out_dir)
+    # First-shell coordination numbers (scalar + plot)
+    Cs_cn, r1_cn, n1_cn = write_coordination_numbers_first_shell(gr, rr, settings_by_cs, out_dir)
 
-    print(f"[Task3+4] Done. Plots written to {out_dir.resolve()}")
+    # Isothermal compressibilities
+    write_compressibilities(Sk, settings_by_cs, kk, out_dir)
+
+    print(f"[Task3+4] Done. Results written to {out_dir.resolve()}")
 
 
 if __name__ == "__main__":
