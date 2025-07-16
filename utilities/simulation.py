@@ -86,22 +86,19 @@ def Simulation2(outdir, write, Traj_name, everyN, random_seed, settings): # forc
 
 
 
-def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi):  # forces turned off
+def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi):  
     settings.init(Csi)
 
-    # ------------------------------------------------------------------
-    # random seed for reproducibility
-    # ------------------------------------------------------------------
-    seed = settings.random_seed if random_seed is None else random_seed       # <-- changed
-    np.random.seed(seed)                                                      # <-- changed
+    seed = settings.random_seed if random_seed is None else random_seed       
+    # np.random.seed(seed)                                                      
 
-    x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings.Cs, seed, settings)  # <-- changed
+    x, y, z, vx, vy, vz = initialize.InitializeAtoms(settings.Cs, seed, settings)  #
     x, y, z, vx, vy, vz = update.update(False, x, y, z, vx, vy, vz, settings.L,
                                         settings.N, settings.sig, settings.delta,
                                         settings.A, settings.m, settings.Zprimesqrd,
                                         settings.lambda_B, settings.kappa_D,
                                         settings.kBT, settings.xi, settings.delta_t,
-                                        settings.gaus_var, seed)                     # <-- changed
+                                        settings.gaus_var, seed)                     #
     # ------------------------------------------------------------------
 
     # open equilibration files
@@ -112,15 +109,15 @@ def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi):  
         output.WriteunwrappedState(fileoutput_eq_unwrapped, 0, x, y, z, vx, vy, vz)
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
     
-    # equilibration run
-    logging.info(f"Starting with equilibration run of {settings.nsteps_eq} steps.")
+    # # equilibration run
+    # logging.info(f"Starting with equilibration run of {settings.nsteps_eq} steps.")
     for i in tqdm(range(settings.nsteps_eq)):
         x, y, z, vx, vy, vz = update.update(False, x, y, z, vx, vy, vz, settings.L,
                                             settings.N, settings.sig, settings.delta,
                                             settings.A, settings.m, settings.Zprimesqrd,
                                             settings.lambda_B, settings.kappa_D,
                                             settings.kBT, settings.xi, settings.delta_t,
-                                            settings.gaus_var, seed)                 # <-- changed
+                                            settings.gaus_var, seed)         
         
         # save shit every n
         if i % everyN == 0:
@@ -138,8 +135,8 @@ def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi):  
         output.WriteunwrappedState(fileoutput_prod_unwrapped, 0, x, y, z, vx, vy, vz)
         # output.WriteTrajectory3d(fileoutput_prod, 0,x,y,z) 
     
-    # production run
-    logging.info(f"Starting with production run of {settings.nsteps} steps.")
+    # # production run
+    # logging.info(f"Starting with production run of {settings.nsteps} steps.")
     Ngr = 0
     nbins = int(settings.L / 2 / settings.dr)
     hist = np.zeros(nbins) 
@@ -149,7 +146,7 @@ def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi):  
                                             settings.A, settings.m, settings.Zprimesqrd,
                                             settings.lambda_B, settings.kappa_D,
                                             settings.kBT, settings.xi, settings.delta_t,
-                                            settings.gaus_var, seed)                 # <-- changed
+                                            settings.gaus_var, seed)             
         
         # save shit every n
         if i % everyN == 0:
@@ -163,11 +160,11 @@ def Simulation3(outdir, write, Traj_name, everyN, random_seed, settings, Csi):  
             # ----------------------------------------------------------
             hist = update.update_hist(hist, x, y, z, settings.dr, settings.N, settings.L)
             Ngr += 1  # another position
-            g = update.calcg(Ngr, hist, settings.dr, settings.rho, settings.N)       # <-- moved inside block
+            g = update.calcg(Ngr, hist, settings.dr, settings.rho, settings.N)  
     # ------------------------------------------------------------------
 
-    # make sure we return a g(r) even if no frame satisfied i % everyN == 0
-    if 'g' not in locals():                                                    # <-- added
-        g = update.calcg(max(Ngr, 1), hist, settings.dr, settings.rho, settings.N)   # <-- added
+    # # make sure we return a g(r) even if no frame satisfied i % everyN == 0
+    # if 'g' not in locals():                                                    # <-- added
+    #     g = update.calcg(max(Ngr, 1), hist, settings.dr, settings.rho, settings.N)   # <-- added
                     
     return g
