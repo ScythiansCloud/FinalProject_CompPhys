@@ -151,20 +151,35 @@ def compute_gr_global_maxima(gr, rr):
 
 
 def plot_gr_global_maxima(Cs_vals, r_max_vals, g_max_vals, out_dir: Path):
+    # --- combined 2-panel figure ---
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    ax = axes[0]
+    ax.plot(Cs_vals, r_max_vals, marker='o')
+    ax.set(xlabel="Cs", ylabel="r_max", title="Peak position")
+    ax = axes[1]
+    ax.plot(Cs_vals, g_max_vals, marker='o')
+    ax.set(xlabel="Cs", ylabel="g_max", title="Peak height")
+    fig.tight_layout()
+    fig.savefig(out_dir / "g_r_peaks_vs_Cs.png", dpi=300)
+    plt.close(fig)
+
+    # --- keep the original separate figures (unchanged behavior) ---
     fig, ax = plt.subplots(figsize=(5,4))
     ax.plot(Cs_vals, r_max_vals, marker='o')
     ax.set(xlabel="Cs", ylabel="r_max")
     fig.savefig(out_dir / "g_r_peak_r_vs_Cs.png", dpi=300)
     plt.close(fig)
+
     fig, ax = plt.subplots(figsize=(5,4))
     ax.plot(Cs_vals, g_max_vals, marker='o')
     ax.set(xlabel="Cs", ylabel="g_max")
     fig.savefig(out_dir / "g_r_peak_g_vs_Cs.png", dpi=300)
     plt.close(fig)
 
-# =============================================================================
-# coordination number for 1st solvation shell (scalar n1 per Cs)
-# =============================================================================
+
+# ----------------------------------------------------------------------------
+# coordination number
+# ----------------------------------------------------------------------------
 
 def _first_shell_cutoff_r(r: np.ndarray, g: np.ndarray, *, min_start: int = 1) -> float:
     g = np.asarray(g)
