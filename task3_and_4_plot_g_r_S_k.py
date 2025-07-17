@@ -68,7 +68,7 @@ def plot_gr_individual(gr, rr, out_dir: Path):
     for Cs, g in gr.items():
         r = rr[Cs]
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(r, g)
+        ax.plot(r, g, color='black')
         ax.set(xlabel="r / sigma", ylabel="g(r)", title=f"g(r) – Cs={Cs}")
         fig.savefig(out_dir / f"g_r_Cs{int(Cs)}.png", dpi=300)
         plt.close(fig)
@@ -111,7 +111,7 @@ def plot_sk_individual(Sk, kk, out_dir: Path):
     for Cs, S_k in Sk.items():
         k = kk[Cs]
         fig, ax = plt.subplots(figsize=(6, 4))
-        ax.plot(k[1:], S_k[1:])  # skip k=0 for scale
+        ax.plot(k[1:], S_k[1:], color='black')  # skip k=0 for scale
         ax.set(xlabel="k", ylabel="S(k)", title=f"S(k) – Cs={Cs}")
         fig.savefig(out_dir / f"S_k_Cs{int(Cs)}.png", dpi=300)
         plt.close(fig)
@@ -154,10 +154,10 @@ def plot_gr_global_maxima(Cs_vals, r_max_vals, g_max_vals, out_dir: Path):
     # --- combined 2-panel figure ---
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     ax = axes[0]
-    ax.plot(Cs_vals, r_max_vals, marker='o')
+    ax.plot(Cs_vals, r_max_vals, marker='o', color='black')
     ax.set(xlabel="Cs", ylabel="r_max", title="Peak position")
     ax = axes[1]
-    ax.plot(Cs_vals, g_max_vals, marker='o')
+    ax.plot(Cs_vals, g_max_vals, marker='o', color='black')
     ax.set(xlabel="Cs", ylabel="g_max", title="Peak height")
     fig.tight_layout()
     fig.savefig(out_dir / "g_r_peaks_vs_Cs.png", dpi=300)
@@ -165,13 +165,13 @@ def plot_gr_global_maxima(Cs_vals, r_max_vals, g_max_vals, out_dir: Path):
 
     # --- keep the original separate figures (unchanged behavior) ---
     fig, ax = plt.subplots(figsize=(5,4))
-    ax.plot(Cs_vals, r_max_vals, marker='o')
+    ax.plot(Cs_vals, r_max_vals, marker='o', color='black')
     ax.set(xlabel="Cs", ylabel="r_max")
     fig.savefig(out_dir / "g_r_peak_r_vs_Cs.png", dpi=300)
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(5,4))
-    ax.plot(Cs_vals, g_max_vals, marker='o')
+    ax.plot(Cs_vals, g_max_vals, marker='o', color='black')
     ax.set(xlabel="Cs", ylabel="g_max")
     fig.savefig(out_dir / "g_r_peak_g_vs_Cs.png", dpi=300)
     plt.close(fig)
@@ -229,7 +229,7 @@ def write_coordination_numbers_first_shell(gr: dict, rr: dict, settings_by_cs: d
     Cs_arr = np.asarray(Cs_vals, dtype=float)
     n1_arr = np.asarray(n1_vals, dtype=float)
     fig, ax = plt.subplots(figsize=(5,4))
-    ax.plot(Cs_arr, n1_arr, marker='o')
+    ax.plot(Cs_arr, n1_arr, marker='o', color='black')
     ax.set(xlabel="Cs", ylabel="coordination number n1")
     fig.savefig(out_dir / "coordination_number_vs_Cs.png", dpi=300)
     plt.close(fig)
