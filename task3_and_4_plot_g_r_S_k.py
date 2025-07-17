@@ -12,7 +12,7 @@ from utilities.utils import create_output_directory
 # ----------------------------------------------------------------------------
 # Settings
 # ----------------------------------------------------------------------------
-DATA_DIR = Path("g_r")      # directory with g_r_Cs*.txt
+DATA_DIR = Path("gofrs")      # directory with g_r_Cs*.txt
 CS_LIST  = [10, 100, 333, 666, 1000]
 K_POINTS = 400
 K_MAX_MULT = 20.0            # k_max = K_MAX_MULT * k_min
@@ -26,7 +26,7 @@ def settings_for_cs(Cs: float):
 
 
 def load_gr_file(data_dir: Path, Cs: float) -> np.ndarray:
-    path = data_dir / f"g_r_Cs{int(round(Cs))}.txt"
+    path = data_dir / f"g_r_Cs{int(round(Cs))}"
     if not path.is_file():
         raise FileNotFoundError(f"Missing g(r) file: {path}")
     g = np.loadtxt(path, dtype=float)

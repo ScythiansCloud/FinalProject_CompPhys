@@ -78,7 +78,7 @@ def init(Csi):
     delta_t= 1e-2*tau       # will change for Cs10
 
     global dr             # bin width for RDF with respect to the box size
-    dr = L/2 / 200#500        # 500 bins for the RDF
+    dr = L/2 / 1000#500        # 500 bins for the RDF
 
 
 
