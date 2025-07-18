@@ -152,7 +152,6 @@ def compute_gr_global_maxima(gr, rr):
 
 
 def plot_gr_global_maxima(Cs_vals, r_max_vals, g_max_vals, out_dir: Path):
-    # --- combined 2-panel figure ---
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     ax = axes[0]
     ax.plot(Cs_vals, r_max_vals, marker='o', color='black')
@@ -164,7 +163,6 @@ def plot_gr_global_maxima(Cs_vals, r_max_vals, g_max_vals, out_dir: Path):
     fig.savefig(out_dir / "g_r_peaks_vs_Cs.png", dpi=300)
     plt.close(fig)
 
-    # --- keep the original separate figures (unchanged behavior) ---
     fig, ax = plt.subplots(figsize=(5,4))
     ax.plot(Cs_vals, r_max_vals, marker='o', color='black')
     ax.set(xlabel="Cs", ylabel="r_max")
@@ -219,8 +217,7 @@ def write_coordination_numbers_first_shell(gr: dict, rr: dict, settings_by_cs: d
         fh.write("# Cs   r1   n1\n")
         for Cs in sorted(gr):
             smod = settings_by_cs[Cs]
-            # rho = getattr(smod, "rho", None) or smod.N / (smod.L ** 3)
-            rho = smod
+            rho = getattr(smod, "rho", None) or smod.N / (smod.L ** 3)
             r1, n1 = coordination_number_first_shell(gr[Cs], rr[Cs], rho)
             fh.write(f"{Cs:10.4g}  {r1:16.8e}  {n1:16.8e}\n")
             Cs_vals.append(Cs)
