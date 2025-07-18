@@ -7,13 +7,9 @@ from numba import njit, prange
 @njit(parallel=True)
 def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
 
-# Wir geben die force zurück aber die Funktion heißt acc, finde ich etwas verwirrend
-    
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
     fz = np.zeros(shape=len(x))
-
-
 
     for i in prange(N-1):
         for j in range(i+1, N):
@@ -42,7 +38,6 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
             
             else:
                 '''calculate lj interacion'''
-                # Jonas: jo passt mMn
                 LJ = -8*kbT/m*((0.27993600/r**8-0.02612138803199999/r**14))
 
                 fx[i] -= LJ* rijx
@@ -52,10 +47,6 @@ def acc(x, y, z, L, N, sig, delta, A, m, Zprimesqrd, lambda_B, kappa_D, kbT):
                 fy[j] += LJ* rijy
                 fz[j] += LJ* rijz
     return fx, fy, fz, x, y, z    
-
-
-### doppelcheckt mla jmd die ableitung der potentiale ob das so sinn macht und algebraisch auch stimmt (und vorzeichen bin ihc mir nicht 100% sicher aber ist mal ein anfang :)
-
 
 
 @njit  

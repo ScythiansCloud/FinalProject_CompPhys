@@ -16,7 +16,6 @@ def InitializeAtoms(Csi, random_seed, settings):
     settings.init(Csi)
     # np.random.seed(settings.random_seed)    
 
-
     x = np.zeros(shape=(settings.N))
     y = np.zeros(shape=(settings.N))
     z = np.zeros(shape=(settings.N))
@@ -55,7 +54,6 @@ def InitializeAtoms(Csi, random_seed, settings):
             vx[n] = vx0
             vy[n] = vy0
             vz[n] = vz0
-
 
             n+= 1
         else:

@@ -80,7 +80,7 @@ def init(Csi):
 
 
     global dr             # bin width for RDF with respect to the box size
-    dr = L/2 / 500        # 500 bins for the RDF
+    dr = L/2 / 1000        # 1000 bins for the RDF
 
 
 
