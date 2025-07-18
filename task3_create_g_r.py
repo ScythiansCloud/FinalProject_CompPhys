@@ -7,7 +7,7 @@ import settings.settings_task3 as settings_std
 import settings.settings_task3_10 as settings_10
 
 # Settings --------------------------------------------------------------------
-CS_LIST = [100, 333, 666, 1000]   # salt concentrations
+CS_LIST = [10, 100, 333, 666, 1000]   # salt concentrations
 EVERY_N = 10                          # sampling interval
 GR_DIR = Path("g_r")                 # outputfolder of the g_r_Cs*.txt
 SIM_DIR = Path("sim_outputs")        # Simulation3 output
@@ -18,14 +18,14 @@ def settings_for_cs(Cs):
     return settings_10 if Cs == 10 else settings_std
 
 
-def run_one_cs(Cs, sim_dir, every_n = EVERY_N):
+def run_one_cs(Cs: float, sim_dir: Path, every_n: int = EVERY_N):
     """Run Simulation3 for a single Cs and return g(r) the g(r)"""
     smod = settings_for_cs(Cs)
     smod.init(Cs)
     name = f"Task3_Cs{int(round(Cs))}"
     print(f"[Task3] Running Simulation3 for Cs={Cs} ...")
     g = Simulation3(sim_dir, True, name, every_n, None, smod, Cs)
-    return np.asarray(g).ravel()
+    return np.asarray(g, dtype=float).ravel()
 
 
 def save_gr_txt(g, Cs, gr_dir):

@@ -13,10 +13,10 @@ def init(Csi):
     N = 343
 
     global nsteps_eq
-    nsteps_eq = 100000       # nsetps_eq != 100 000 for equilibration run
+    nsteps_eq = 1000      # nsetps_eq != 100 000 for equilibration run
 
     global nsteps   
-    nsteps = 100000          # nsteps != 100 000 for production run
+    nsteps = 1000         # nsteps != 100 000 for production run
 
     global nsave
     nsave = 10
@@ -78,7 +78,7 @@ def init(Csi):
     delta_t= 1e-2*tau       # will change for Cs10
 
     global dr             # bin width for RDF with respect to the box size
-    dr = L/2 / 1000#500        # 500 bins for the RDF
+    dr = L/2 / 200#500        # 500 bins for the RDF
 
 
 

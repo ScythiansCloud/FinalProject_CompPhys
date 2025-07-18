@@ -13,10 +13,10 @@ def init(Csi):
     N = 343
 
     global nsteps_eq
-    nsteps_eq = 500_000       # nsetps_eq != 500 000 to run the same time when using delta_t=2/1000
+    nsteps_eq = 1000       # nsetps_eq != 500 000 to run the same time when using delta_t=2/1000
 
     global nsteps   
-    nsteps = 500_000          # nsteps != 500 000 to run the same time when using delta_t=2/1000 
+    nsteps = 1000         # nsteps != 500 000 to run the same time when using delta_t=2/1000 
 
     global nsave
     nsave = 50
@@ -80,7 +80,7 @@ def init(Csi):
 
 
     global dr             # bin width for RDF with respect to the box size
-    dr = L/2 / 1000        # 1000 bins for the RDF
+    dr = L/2 / 200        # 1000 bins for the RDF
 
 
 
