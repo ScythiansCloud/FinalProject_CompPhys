@@ -69,7 +69,7 @@ def plot_gr_individual(gr, rr, out_dir: Path):
         r = rr[Cs]
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(r, g, color='black')
-        ax.set(xlabel="r / sigma", ylabel="g(r)", title=f"g(r) – Cs={Cs}")
+        ax.set(xlabel=r"$r / \sigma$", ylabel="g(r)", title=f"g(r) – Cs={Cs}")
         fig.savefig(out_dir / f"g_r_Cs{int(Cs)}.png", dpi=300)
         plt.close(fig)
 
@@ -81,7 +81,7 @@ def plot_gr_combined(gr, rr, out_dir: Path):
     fig, ax = plt.subplots(figsize=(8, 5))
     for Cs in sorted(gr):
         ax.plot(rr[Cs], gr[Cs], label=f"Cs={Cs}")
-    ax.set(xlabel="r / sigma", ylabel="g(r)")
+    ax.set(xlabel=r"$r / \sigma$", ylabel="g(r)")
     ax.legend()
     fig.savefig(out_dir / "g_r_all.png", dpi=300)
     plt.close(fig)
@@ -97,7 +97,8 @@ def compute_sk(gr, settings_by_cs):
         smod = settings_by_cs[Cs]
         dr = smod.dr
         L = smod.L
-        rho = getattr(smod, "rho", None) or smod.N / (L ** 3)
+        # rho = getattr(smod, "rho", None) or smod.N / (L ** 3)
+        rho = smod.rho
         k = k_grid(L)
         with np.errstate(divide='ignore', invalid='ignore'):
             S_k = compute_S_of_k_from_gr(g, dr, rho, k)
@@ -218,7 +219,8 @@ def write_coordination_numbers_first_shell(gr: dict, rr: dict, settings_by_cs: d
         fh.write("# Cs   r1   n1\n")
         for Cs in sorted(gr):
             smod = settings_by_cs[Cs]
-            rho = getattr(smod, "rho", None) or smod.N / (smod.L ** 3)
+            # rho = getattr(smod, "rho", None) or smod.N / (smod.L ** 3)
+            rho = smod
             r1, n1 = coordination_number_first_shell(gr[Cs], rr[Cs], rho)
             fh.write(f"{Cs:10.4g}  {r1:16.8e}  {n1:16.8e}\n")
             Cs_vals.append(Cs)
